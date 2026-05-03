@@ -1,0 +1,124 @@
+import { NOTE_COLORS, pcToName } from '../data/musicTheory.js';
+import { useAudio } from '../hooks/useAudio.js';
+import Piano from './Piano.jsx';
+import GuitarDiagram from './GuitarDiagram.jsx';
+
+export default function InstrumentPanel({
+  currentKeyInfo,
+  activeChordPcs, activeChordRoot, activeName,
+  isFlat, labelMode, onLabelModeChange,
+  instrumentMode, onInstrumentModeChange,
+  selectedChordDegree,
+}) {
+  const { playScale, playChord, isPlaying } = useAudio();
+  const { scalePcs, rootPc } = currentKeyInfo;
+
+  const chips = activeChordPcs
+    ? activeChordPcs.map(pc => ({ pc, label: pcToName(pc, isFlat) }))
+    : scalePcs.map(pc => ({ pc, label: pcToName(pc, isFlat) }));
+
+  function handlePlay() {
+    if (isPlaying) return;
+    if (activeChordPcs) {
+      playChord(activeChordPcs, 4, 'arpeggio');
+    } else {
+      playScale(scalePcs, 4);
+    }
+  }
+
+  return (
+    <div className="rounded-2xl px-5 py-4"
+      style={{ background: 'rgba(255,255,255,0.045)', border: '1px solid rgba(255,255,255,0.09)' }}>
+      {/* Header row */}
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] font-bold tracking-[2px] text-white/25 uppercase">Instrument View</span>
+          {/* Notes / Intervals toggle */}
+          <div className="flex bg-white/[0.06] rounded-lg p-0.5 gap-0.5">
+            {['notes','intervals'].map(m => (
+              <button key={m}
+                onClick={() => onLabelModeChange(m)}
+                className="px-3 py-1 rounded-md text-[11px] font-semibold capitalize transition-colors"
+                style={labelMode === m
+                  ? { background: 'rgba(255,255,255,0.1)', color: 'white' }
+                  : { color: 'rgba(255,255,255,0.35)' }}>
+                {m}
+              </button>
+            ))}
+          </div>
+        </div>
+        {/* Piano / Guitar toggle */}
+        <div className="flex bg-white/[0.06] rounded-lg p-0.5 gap-0.5">
+          {[['piano','🎹 Piano'],['guitar','🎸 Guitar']].map(([mode, label]) => (
+            <button key={mode}
+              onClick={() => onInstrumentModeChange(mode)}
+              className="px-4 py-1.5 rounded-md text-[11px] font-semibold transition-colors"
+              style={instrumentMode === mode
+                ? { background: 'linear-gradient(135deg,#a78bfa,#60a5fa)', color: 'white' }
+                : { color: 'rgba(255,255,255,0.38)' }}>
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Instrument view */}
+      {instrumentMode === 'piano' ? (
+        <Piano
+          currentKeyInfo={currentKeyInfo}
+          activeChordPcs={activeChordPcs}
+          activeChordRoot={activeChordRoot}
+          isFlat={isFlat}
+          labelMode={labelMode}
+        />
+      ) : (
+        <div className="min-h-[140px]">
+          {activeName ? (
+            <GuitarDiagram chordName={activeName} isFlat={isFlat} />
+          ) : (
+            <div className="flex items-center justify-center h-36 text-white/25 text-sm">
+              Select a chord to see the guitar diagram
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Audio bar */}
+      <div className="flex items-center gap-3 mt-4 p-3 rounded-xl"
+        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+        <button
+          onClick={handlePlay}
+          disabled={isPlaying}
+          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-[11px] font-bold transition-opacity disabled:opacity-40"
+          style={{ background: 'linear-gradient(135deg,#a78bfa,#60a5fa)', color: 'white' }}>
+          {isPlaying ? '◼' : '▶'}
+        </button>
+        <span className="text-[10px] text-white/28 uppercase tracking-wide flex-shrink-0">
+          {activeChordPcs ? 'Chord' : 'Scale'}
+        </span>
+        <div className="flex gap-1.5 flex-wrap">
+          {chips.map(({ pc, label: chipLabel }, i) => {
+            const color = NOTE_COLORS[pc];
+            const isRoot = activeChordPcs ? pc === activeChordRoot : pc === rootPc;
+            return (
+              <button
+                key={i}
+                onClick={() => !isPlaying && playChord([pc], 4, 'block')}
+                className="text-[11px] font-bold rounded-lg px-2 py-1 border transition-opacity hover:opacity-80"
+                style={{
+                  background: isRoot ? `${color}45` : `${color}18`,
+                  borderColor: `${color}50`,
+                  color,
+                }}>
+                {chipLabel}
+              </button>
+            );
+          })}
+        </div>
+        <span className="ml-auto text-[10px] text-white/20">
+          {activeName || currentKeyInfo.label}
+        </span>
+      </div>
+    </div>
+  );
+}
