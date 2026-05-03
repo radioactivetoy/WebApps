@@ -1,5 +1,6 @@
 import { NOTE_COLORS, pcToName,
-  majorNumerals, minorNumerals, major7Numerals, minor7Numerals } from '../data/musicTheory.js';
+  majorNumerals, minorNumerals, major7Numerals, minor7Numerals,
+  majorHarmonicFn, minorHarmonicFn, HARMONIC_FN_COLORS } from '../data/musicTheory.js';
 
 export default function DiatonicChords({
   currentKeyInfo, selectedChordDegree, onChordSelect, chordType, onChordTypeChange
@@ -9,6 +10,8 @@ export default function DiatonicChords({
   const activeNumerals = type === 'major'
     ? (chordType === 'triad' ? majorNumerals : major7Numerals)
     : (chordType === 'triad' ? minorNumerals : minor7Numerals);
+
+  const harmonicFns = type === 'major' ? majorHarmonicFn : minorHarmonicFn;
 
   const chords = scalePcs.map((cRootPc, i) => {
     const numeral = activeNumerals[i];
@@ -24,7 +27,8 @@ export default function DiatonicChords({
     }
     const name = pcToName(cRootPc, isFlat) + suffix;
     const color = NOTE_COLORS[cRootPc];
-    return { degree: i, numeral, name, color, rootPc: cRootPc };
+    const fn = harmonicFns[i];
+    return { degree: i, numeral, name, color, rootPc: cRootPc, fn };
   });
 
   const selected = selectedChordDegree !== null ? chords[selectedChordDegree] : null;
@@ -70,6 +74,13 @@ export default function DiatonicChords({
               <span className="text-[10px] mt-0.5 font-medium"
                 style={{ color: isActive ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.3)' }}>
                 {chord.name}
+              </span>
+              <span className="text-[8px] mt-1 px-1.5 py-0.5 rounded-full font-semibold"
+                style={{
+                  color: HARMONIC_FN_COLORS[chord.fn],
+                  background: `${HARMONIC_FN_COLORS[chord.fn]}22`,
+                }}>
+                {chord.fn}
               </span>
             </button>
           );

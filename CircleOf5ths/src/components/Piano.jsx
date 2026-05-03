@@ -1,4 +1,4 @@
-import { NOTE_COLORS, PIANO_KEYS, pcToName, getInterval } from '../data/musicTheory.js';
+import { NOTE_COLORS, PIANO_KEYS, pcToName, INTERVAL_LABELS } from '../data/musicTheory.js';
 
 const WHITE_W = 40;
 const WHITE_H = 130;
@@ -17,21 +17,22 @@ export default function Piano({ currentKeyInfo, activeChordPcs, activeChordRoot,
   function keyColor(pc) {
     const c = NOTE_COLORS[pc];
     if (activeChordPcs) {
-      if (pc === activeChordRoot) return `${c}DA`;
-      if (activeChordPcs.includes(pc)) return `${c}80`;
-      if (scalePcs.includes(pc)) return `${c}38`;
-      return '#0d0b1e';
+      if (pc === activeChordRoot) return c;
+      if (activeChordPcs.includes(pc)) return c;
+      return null;
     }
-    if (pc === rootPc) return `${c}BF`;
-    if (scalePcs.includes(pc)) return `${c}38`;
+    if (pc === rootPc) return c;
+    if (scalePcs.includes(pc)) return c;
     return null;
   }
 
-  function label(pc) {
-    if (labelMode === 'intervals') {
-      const ref = activeChordRoot !== undefined ? activeChordRoot : rootPc;
-      return getInterval(pc, ref);
-    }
+  function intervalData(pc) {
+    const ref = activeChordRoot !== undefined ? activeChordRoot : rootPc;
+    const diff = (pc - ref + 12) % 12;
+    return INTERVAL_LABELS[diff];
+  }
+
+  function noteName(pc) {
     return pcToName(pc, isFlat);
   }
 
@@ -50,37 +51,57 @@ export default function Piano({ currentKeyInfo, activeChordPcs, activeChordRoot,
         >
           {/* White keys */}
           {whiteKeys.map(k => {
-            const fill = keyColor(k.pc) ?? '#0d0b1e20';
-            const border = NOTE_COLORS[k.pc] + '50';
-            const x = whiteX(k.whiteIdx);
+            const colorFill = keyColor(k.pc);
+            const fill = colorFill ?? '#f5f5f5';
             const noteColor = NOTE_COLORS[k.pc];
+            const x = whiteX(k.whiteIdx);
             return (
               <g key={k.note}>
                 <rect x={x} y={1} width={WHITE_W - 2} height={WHITE_H}
-                  rx={4} fill={fill} stroke={border} strokeWidth={1} />
-                <text x={x + (WHITE_W - 2) / 2} y={WHITE_H - 8}
-                  textAnchor="middle" fontSize={9} fontWeight={700}
-                  fill={noteColor} style={{ fontFamily: 'system-ui, sans-serif' }}>
-                  {label(k.pc)}
-                </text>
+                  rx={4} fill={fill} stroke="rgba(255,255,255,0.08)" strokeWidth={1} />
+                {labelMode === 'intervals' ? (() => {
+                  const iv = intervalData(k.pc);
+                  const textFill = colorFill ? 'rgba(0,0,0,0.8)' : '#888';
+                  return (
+                    <>
+                      <text x={x + (WHITE_W - 2) / 2} y={WHITE_H - 20}
+                        textAnchor="middle" fontSize={9} fontWeight={700}
+                        fill={textFill} style={{ fontFamily: 'system-ui, sans-serif' }}>
+                        {iv.line1}
+                      </text>
+                      <text x={x + (WHITE_W - 2) / 2} y={WHITE_H - 8}
+                        textAnchor="middle" fontSize={10} fontWeight={800}
+                        fill={textFill} style={{ fontFamily: 'system-ui, sans-serif' }}>
+                        {iv.line2}
+                      </text>
+                    </>
+                  );
+                })() : (
+                  <text x={x + (WHITE_W - 2) / 2} y={WHITE_H - 7}
+                    textAnchor="middle" fontSize={11} fontWeight={700}
+                    fill={colorFill ? 'rgba(0,0,0,0.8)' : '#555'}
+                    style={{ fontFamily: 'system-ui, sans-serif' }}>
+                    {noteName(k.pc)}
+                  </text>
+                )}
               </g>
             );
           })}
           {/* Black keys */}
           {blackKeys.map(k => {
-            const fillOverride = keyColor(k.pc);
-            const fill = fillOverride ?? '#0d0b1e';
+            const colorFill = keyColor(k.pc);
+            const fill = colorFill ?? '#000';
             const noteColor = NOTE_COLORS[k.pc];
             const x = blackX(k.whiteIdx);
             return (
               <g key={k.note}>
                 <rect x={x} y={1} width={BLACK_W} height={BLACK_H}
-                  rx={3} fill={fill} stroke="rgba(255,255,255,0.07)" strokeWidth={1} />
-                <text x={x + BLACK_W / 2} y={BLACK_H - 8}
-                  textAnchor="middle" fontSize={7} fontWeight={600}
-                  fill={fillOverride ? 'white' : `${noteColor}55`}
+                  rx={3} fill={fill} stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
+                <text x={x + BLACK_W / 2} y={BLACK_H - 7}
+                  textAnchor="middle" fontSize={9} fontWeight={700}
+                  fill={colorFill ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.7)'}
                   style={{ fontFamily: 'system-ui, sans-serif' }}>
-                  {label(k.pc)}
+                  {labelMode === 'intervals' ? intervalData(k.pc).short : noteName(k.pc)}
                 </text>
               </g>
             );
@@ -93,14 +114,13 @@ export default function Piano({ currentKeyInfo, activeChordPcs, activeChordRoot,
           <>
             <Legend dot="#f87171" label="Chord Root" />
             <Legend dot="rgba(248,113,113,0.5)" label="Chord Tone" />
-            <Legend dot="rgba(74,222,128,0.25)" label="Scale Note" />
-            <Legend dot="#0d0b1e" label="Outside Scale" border />
+            <Legend dot="#13102a" label="Other" border />
           </>
         ) : (
           <>
             <Legend dot="#f87171" label="Root" />
-            <Legend dot="rgba(74,222,128,0.25)" label="Scale Note" />
-            <Legend dot="#0d0b1e" label="Outside Scale" border />
+            <Legend dot="rgba(74,222,128,0.45)" label="Scale Note" />
+            <Legend dot="#f5f5f5" label="Outside Scale" border />
           </>
         )}
       </div>

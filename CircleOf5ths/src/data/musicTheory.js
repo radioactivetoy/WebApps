@@ -1,7 +1,7 @@
 // ── Note color system — one color per chromatic pitch class ──────────────────
 export const NOTE_COLORS = {
   0:  '#f87171', // C  — red
-  1:  '#fc8b4d', // C#/Db — red-orange
+  1:  '#f472b6', // C#/Db — pink
   2:  '#fb923c', // D  — orange
   3:  '#fcd34d', // D#/Eb — amber-yellow
   4:  '#fbbf24', // E  — amber
@@ -77,6 +77,21 @@ export const getInterval = (pc, rootPc) => {
   return ['R','b2','2','b3','3','4','b5','5','b6','6','b7','7'][diff];
 };
 
+export const INTERVAL_LABELS = [
+  { line1: 'Root',    line2: '',      short: 'R'  },
+  { line1: 'Minor',   line2: '2nd',   short: 'm2' },
+  { line1: 'Major',   line2: '2nd',   short: 'M2' },
+  { line1: 'Minor',   line2: '3rd',   short: 'm3' },
+  { line1: 'Major',   line2: '3rd',   short: 'M3' },
+  { line1: 'Perfect', line2: '4th',   short: 'P4' },
+  { line1: 'Aug',     line2: '4th',   short: 'A4' },
+  { line1: 'Perfect', line2: '5th',   short: 'P5' },
+  { line1: 'Minor',   line2: '6th',   short: 'm6' },
+  { line1: 'Major',   line2: '6th',   short: 'M6' },
+  { line1: 'Minor',   line2: '7th',   short: 'm7' },
+  { line1: 'Major',   line2: '7th',   short: 'M7' },
+];
+
 export const noteToPc = (noteStr) => {
   if (!noteStr) return null;
   const map = {
@@ -90,6 +105,18 @@ export const noteToPc = (noteStr) => {
 };
 
 // ── Chord numeral arrays ──────────────────────────────────────────────────────
+// Harmonic function per diatonic degree (major / minor)
+export const majorHarmonicFn = ['Tonic','Subdom','Tonic','Subdom','Dominant','Tonic','Dominant'];
+export const minorHarmonicFn = ['Tonic','Subdom','Mediant','Subdom','Dominant','Subdom','Subtonic'];
+
+export const HARMONIC_FN_COLORS = {
+  'Tonic':    '#60a5fa',
+  'Subdom':   '#4ade80',
+  'Dominant': '#f87171',
+  'Mediant':  '#a78bfa',
+  'Subtonic': '#fbbf24',
+};
+
 export const majorNumerals   = ['I','ii','iii','IV','V','vi','vii°'];
 export const minorNumerals   = ['i','ii°','III','iv','v','VI','VII'];
 export const major7Numerals  = ['Imaj7','ii7','iii7','IVmaj7','V7','vi7','viiø7'];
