@@ -5,9 +5,7 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
     "./App.jsx",
   ],
-  darkMode: 'media',
-  theme: {
-    extend: {},
-  },
+  darkMode: 'class',
+  theme: { extend: {} },
   plugins: [],
 }
