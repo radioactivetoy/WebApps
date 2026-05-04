@@ -4,8 +4,8 @@ const STAFF_LINES = [18, 28, 38, 48, 58];
 const SHARP_Y = [18, 33, 13, 28, 43, 23, 38];
 const FLAT_Y  = [38, 23, 43, 28, 48, 33, 53];
 
-export default function Staff({ currentKeyInfo, activeDrawScale, scaleLabel }) {
-  const { accidentals, accType } = currentKeyInfo;
+export default function Staff({ currentKeyInfo, activeDrawScale, scaleLabel, keySignature }) {
+  const { accidentals, accType } = keySignature ?? currentKeyInfo;
   const drawScale = activeDrawScale;
   const label = scaleLabel;
 

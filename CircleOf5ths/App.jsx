@@ -156,6 +156,7 @@ export default function App() {
             currentKeyInfo={currentKeyInfo}
             activeDrawScale={activeDrawScale}
             scaleLabel={`${currentKeyInfo.label.split(' ')[0]} ${SCALES[scaleMode].label}`}
+            keySignature={parentKeyName ? musicKeys[parentKeyName] : currentKeyInfo}
           />
           <InstrumentPanel
             currentKeyInfo={currentKeyInfo}
