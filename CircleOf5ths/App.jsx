@@ -11,6 +11,7 @@ import ScaleSelector from './src/components/ScaleSelector.jsx';
 import RootPicker from './src/components/RootPicker.jsx';
 import ScaleFormulaStrip from './src/components/ScaleFormulaStrip.jsx';
 import CommonProgressions from './src/components/CommonProgressions.jsx';
+import ChordFamilyTable from './src/components/ChordFamilyTable.jsx';
 
 export default function App() {
   const [selectedKey, setSelectedKey]                   = useState('C');
@@ -206,6 +207,15 @@ export default function App() {
             onChordSelect={handleChordSelect}
             chordVariant={chordVariant}
             onChordVariantChange={setChordVariant}
+            onHighlightChord={handleHighlightChord}
+          />
+          <ChordFamilyTable
+            activeScalePcs={activeScalePcs}
+            scaleMode={scaleMode}
+            rootPc={currentKeyInfo.rootPc}
+            isFlat={isFlat}
+            selectedChordDegree={selectedChordDegree}
+            onChordSelect={handleChordSelect}
             onHighlightChord={handleHighlightChord}
           />
           <CommonProgressions
