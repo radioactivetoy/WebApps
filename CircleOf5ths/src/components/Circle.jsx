@@ -126,7 +126,7 @@ export default function Circle({ selectedKey, onKeySelect, rotationAngle, parent
           const a2 = i * 30 + 15;
           const color = NOTE_COLORS[musicKeys[slice.minor]?.rootPc ?? 0];
           const isActive = i === selectedIndex && !isMajor;
-          const isDiatonic = diatonicIdxs.includes(i) && !isActive;
+          const isDiatonic = diatonicIdxs.includes(i) && !isActive && !(isModal && i === selectedIndex);
 
           return (
             <g key={`min-${i}`} onClick={() => onKeySelect(slice.minor)} style={{ cursor: 'pointer' }}>

@@ -88,6 +88,7 @@ export default function App() {
     setScaleMode(mode);
     setSelectedChordDegree(null);
     setCustomChordHighlight(null);
+    // parentKeyName memo is stale here (mode state not yet applied), so we recompute
     const offset = SCALES[mode].parentOffset;
     if (offset !== null) {
       const parentPc = (currentKeyInfo.rootPc + offset) % 12;
