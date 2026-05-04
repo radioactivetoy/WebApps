@@ -1,7 +1,7 @@
 import { NOTE_COLORS, musicKeys, circleSlices } from '../data/musicTheory.js';
 
 function getRelatedKeys(selectedKey, currentKeyInfo) {
-  const { rootPc, type, accType } = currentKeyInfo;
+  const { rootPc, type } = currentKeyInfo;
 
   const relativeKey = type === 'major'
     ? circleSlices.find(s => s.major === selectedKey)?.minor
@@ -40,7 +40,7 @@ function Pill({ label, keyName, onKeySelect }) {
   );
 }
 
-export default function KeyInfoBar({ selectedKey, currentKeyInfo, onKeySelect }) {
+export default function KeyInfoBar({ selectedKey, currentKeyInfo, parentKeyName, onKeySelect }) {
   const { rootPc, accidentals, accType, label } = currentKeyInfo;
   const color = NOTE_COLORS[rootPc];
   const { relativeKey, parallelKey, dominantKey, subdominantKey } = getRelatedKeys(selectedKey, currentKeyInfo);
@@ -56,10 +56,23 @@ export default function KeyInfoBar({ selectedKey, currentKeyInfo, onKeySelect })
     ? '0 accidentals · Natural'
     : `${accidentals} ${accidentals === 1 ? accType : accType+'s'}`;
 
+  // parentKeyName is a musicKeys key like 'Bb' or null
+  const parentEntry = parentKeyName ? musicKeys[parentKeyName] : null;
+  const parentColor = parentEntry ? NOTE_COLORS[parentEntry.rootPc] : null;
+
   return (
     <div className="px-7 py-2.5 flex items-center gap-3 flex-wrap border-b"
       style={{ background: `${color}10`, borderColor: `${color}25` }}>
       <span className="text-xl font-black" style={{ color }}>{displayLabel}</span>
+      {parentEntry && parentColor && (
+        <button
+          onClick={() => onKeySelect(parentKeyName)}
+          className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border hover:opacity-80 transition-opacity"
+          style={{ background: `${parentColor}18`, borderColor: `${parentColor}40`, color: parentColor }}>
+          <span className="text-white/40 font-normal">parent key:</span>
+          {parentEntry.label} →
+        </button>
+      )}
       <Pill label="Relative"    keyName={relativeKey}    onKeySelect={onKeySelect} />
       <Pill label="Parallel"    keyName={parallelKey}    onKeySelect={onKeySelect} />
       <Pill label="→ Dominant"  keyName={dominantKey}    onKeySelect={onKeySelect} />
