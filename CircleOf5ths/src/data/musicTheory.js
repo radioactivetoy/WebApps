@@ -147,10 +147,12 @@ const _STAFF_SHARP = ['C','C','D','D','E','F','F','G','G','A','A','B'];
 const _STAFF_FLAT  = ['C','D','D','E','E','F','G','G','A','A','B','B'];
 
 export function computeDrawScale(rootPc, scalePcs, isFlat) {
-  const letters = isFlat ? _STAFF_FLAT : _STAFF_SHARP;
-  let octave = rootPc >= 9 ? 3 : 4; // A/Bb/B roots start at octave 3
+  const sharpMapped = scalePcs.map(pc => _STAFF_SHARP[pc]);
+  const hasCollision = new Set(sharpMapped).size < sharpMapped.length;
+  const letters = (isFlat || hasCollision) ? _STAFF_FLAT : _STAFF_SHARP;
+  let octave = rootPc >= 9 ? 3 : 4;
   return scalePcs.map((pc, i) => {
-    if (i > 0 && pc < scalePcs[i - 1]) octave++; // wrapped past B→C
+    if (i > 0 && pc < scalePcs[i - 1]) octave++;
     return letters[pc] + octave;
   });
 }
