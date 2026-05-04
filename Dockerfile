@@ -17,6 +17,7 @@ RUN npm run build -- --base=/circle-of-fifths/
 # ── Serve everything ──────────────────────────────────────
 FROM nginx:alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY index.html /usr/share/nginx/html/index.html
 COPY --from=build-circle-of-fifths /app/dist /usr/share/nginx/html/circle-of-fifths
 # COPY --from=build-my-new-app      /app/dist /usr/share/nginx/html/my-new-app
 EXPOSE 80

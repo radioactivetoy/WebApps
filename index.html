@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Web Apps</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      color: #fff;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa, #34d399);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-size: 0.875rem;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 3rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    a.card {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      padding: 1.25rem 1.5rem;
+      background: rgba(255,255,255,0.045);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 16px;
+      backdrop-filter: blur(24px);
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    }
+
+    a.card:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.18);
+      transform: translateY(-2px);
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .card-desc {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.45);
+      line-height: 1.4;
+    }
+
+    .card-arrow {
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.25);
+    }
+  </style>
+</head>
+<body>
+  <h1>Web Apps</h1>
+  <p class="subtitle">Choose an app</p>
+
+  <div class="grid">
+    <a class="card" href="/circle-of-fifths/">
+      <span class="card-title">Circle of Fifths</span>
+      <span class="card-desc">Interactive music theory explorer with chord diagrams, scales, and audio playback.</span>
+      <span class="card-arrow">Open →</span>
+    </a>
+
+    <!-- Add new apps here:
+    <a class="card" href="/my-new-app/">
+      <span class="card-title">My New App</span>
+      <span class="card-desc">Short description of what it does.</span>
+      <span class="card-arrow">Open →</span>
+    </a>
+    -->
+  </div>
+</body>
+</html>
