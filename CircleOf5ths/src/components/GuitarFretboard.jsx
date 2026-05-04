@@ -1,4 +1,4 @@
-import { NOTE_COLORS } from '../data/musicTheory.js';
+import { NOTE_COLORS, pcToName, INTERVAL_LABELS } from '../data/musicTheory.js';
 
 // Strings top→bottom: high e, B, G, D, A, low E
 const STRING_LABELS = ['e', 'B', 'G', 'D', 'A', 'E'];
@@ -24,14 +24,24 @@ function sY(s) { return MT + s * SS; }
 function fX(f) { return NUT_X + (f - 0.5) * FRET_W; } // center of fret f (1-indexed)
 function fLineX(f) { return NUT_X + f * FRET_W; }      // fret bar position (0=nut edge, 1..15)
 
-export default function GuitarFretboard({ activeScalePcs, activeChordPcs, activeChordRoot, rootPc }) {
+export default function GuitarFretboard({ activeScalePcs, activeChordPcs, activeChordRoot, rootPc, labelMode, isFlat }) {
   const scalePcsSet = new Set(activeScalePcs);
   const chordPcsSet = activeChordPcs ? new Set(activeChordPcs) : null;
   const highlightRoot = activeChordRoot ?? rootPc;
+  const intervalRef = activeChordRoot ?? rootPc;
 
   function dotOpacity(pc) {
     if (!chordPcsSet) return 1;
     return chordPcsSet.has(pc) ? 1 : 0.22;
+  }
+
+  function dotLabel(pc) {
+    if (!labelMode || labelMode === 'none') return null;
+    if (labelMode === 'intervals') {
+      const diff = (pc - intervalRef + 12) % 12;
+      return INTERVAL_LABELS[diff].short;
+    }
+    return pcToName(pc, isFlat);
   }
 
   const midY = MT + STRINGS_H / 2;
@@ -98,10 +108,14 @@ export default function GuitarFretboard({ activeScalePcs, activeChordPcs, active
         if (scalePcsSet.has(oPc)) {
           const color = NOTE_COLORS[oPc];
           const isRoot = oPc === highlightRoot;
+          const lbl = dotLabel(oPc);
           positions.push(
             <g key="o" opacity={dotOpacity(oPc)}>
               <circle cx={OPEN_X} cy={sY(s)} r={DOT_R} fill={color} />
               {isRoot && <circle cx={OPEN_X} cy={sY(s)} r={DOT_R} fill="none" stroke="white" strokeWidth={2.5} />}
+              {lbl && <text x={OPEN_X} y={sY(s)} textAnchor="middle" dominantBaseline="middle"
+                fontSize={7} fontWeight={700} fill="rgba(0,0,0,0.8)"
+                style={{ pointerEvents: 'none', fontFamily: 'system-ui, sans-serif' }}>{lbl}</text>}
             </g>
           );
         }
@@ -114,10 +128,14 @@ export default function GuitarFretboard({ activeScalePcs, activeChordPcs, active
           const isRoot = pc === highlightRoot;
           const cx = fX(f);
           const cy = sY(s);
+          const lbl = dotLabel(pc);
           positions.push(
             <g key={f} opacity={dotOpacity(pc)}>
               <circle cx={cx} cy={cy} r={DOT_R} fill={color} />
               {isRoot && <circle cx={cx} cy={cy} r={DOT_R} fill="none" stroke="white" strokeWidth={2.5} />}
+              {lbl && <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle"
+                fontSize={7} fontWeight={700} fill="rgba(0,0,0,0.8)"
+                style={{ pointerEvents: 'none', fontFamily: 'system-ui, sans-serif' }}>{lbl}</text>}
             </g>
           );
         }

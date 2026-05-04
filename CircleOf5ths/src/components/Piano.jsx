@@ -15,16 +15,18 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
   const blackKeys = PIANO_KEYS.filter(k => k.isBlack);
   const totalWhite = whiteKeys.length;
 
-  function keyColor(pc) {
+  function keyState(pc) {
     const c = NOTE_COLORS[pc];
     if (activeChordPcs) {
-      if (pc === activeChordRoot) return c;
-      if (activeChordPcs.includes(pc)) return c;
-      return null;
+      if (pc === activeChordRoot || activeChordPcs.includes(pc))
+        return { fill: c, active: true, dim: false };
+      if (scalePcs.includes(pc))
+        return { fill: `${c}40`, active: false, dim: true };
+      return { fill: null, active: false, dim: false };
     }
-    if (pc === rootPc) return c;
-    if (scalePcs.includes(pc)) return c;
-    return null;
+    if (pc === rootPc || scalePcs.includes(pc))
+      return { fill: c, active: true, dim: false };
+    return { fill: null, active: false, dim: false };
   }
 
   function intervalData(pc) {
@@ -52,9 +54,9 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
         >
           {/* White keys */}
           {whiteKeys.map(k => {
-            const colorFill = keyColor(k.pc);
-            const fill = colorFill ?? '#f5f5f5';
-            const noteColor = NOTE_COLORS[k.pc];
+            const state = keyState(k.pc);
+            const fill = state.fill ?? '#f5f5f5';
+            const textFill = state.active ? 'rgba(0,0,0,0.8)' : state.dim ? NOTE_COLORS[k.pc] : '#888';
             const x = whiteX(k.whiteIdx);
             return (
               <g key={k.note}>
@@ -62,7 +64,6 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
                   rx={4} fill={fill} stroke="rgba(255,255,255,0.08)" strokeWidth={1} />
                 {labelMode === 'intervals' ? (() => {
                   const iv = intervalData(k.pc);
-                  const textFill = colorFill ? 'rgba(0,0,0,0.8)' : '#888';
                   return (
                     <>
                       <text x={x + (WHITE_W - 2) / 2} y={WHITE_H - 20}
@@ -80,8 +81,7 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
                 })() : (
                   <text x={x + (WHITE_W - 2) / 2} y={WHITE_H - 7}
                     textAnchor="middle" fontSize={11} fontWeight={700}
-                    fill={colorFill ? 'rgba(0,0,0,0.8)' : '#555'}
-                    style={{ fontFamily: 'system-ui, sans-serif' }}>
+                    fill={textFill} style={{ fontFamily: 'system-ui, sans-serif' }}>
                     {noteName(k.pc)}
                   </text>
                 )}
@@ -90,9 +90,9 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
           })}
           {/* Black keys */}
           {blackKeys.map(k => {
-            const colorFill = keyColor(k.pc);
-            const fill = colorFill ?? '#000';
-            const noteColor = NOTE_COLORS[k.pc];
+            const state = keyState(k.pc);
+            const fill = state.fill ?? '#000';
+            const textFill = state.active ? 'rgba(0,0,0,0.85)' : state.dim ? NOTE_COLORS[k.pc] : 'rgba(255,255,255,0.7)';
             const x = blackX(k.whiteIdx);
             return (
               <g key={k.note}>
@@ -100,8 +100,7 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
                   rx={3} fill={fill} stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
                 <text x={x + BLACK_W / 2} y={BLACK_H - 7}
                   textAnchor="middle" fontSize={9} fontWeight={700}
-                  fill={colorFill ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.7)'}
-                  style={{ fontFamily: 'system-ui, sans-serif' }}>
+                  fill={textFill} style={{ fontFamily: 'system-ui, sans-serif' }}>
                   {labelMode === 'intervals' ? intervalData(k.pc).short : noteName(k.pc)}
                 </text>
               </g>
@@ -114,8 +113,9 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
         {activeChordPcs ? (
           <>
             <Legend dot="#f87171" label="Chord Root" />
-            <Legend dot="rgba(248,113,113,0.5)" label="Chord Tone" />
-            <Legend dot="#13102a" label="Other" border />
+            <Legend dot="rgba(248,113,113,0.6)" label="Chord Tone" />
+            <Legend dot="rgba(248,113,113,0.22)" label="Scale Tone" />
+            <Legend dot="#f5f5f5" label="Outside" border />
           </>
         ) : (
           <>

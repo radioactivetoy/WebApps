@@ -80,6 +80,8 @@ export default function InstrumentPanel({
             activeChordPcs={activeChordPcs}
             activeChordRoot={activeChordRoot}
             rootPc={rootPc}
+            labelMode={labelMode}
+            isFlat={isFlat}
           />
         </div>
       )}
