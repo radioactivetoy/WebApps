@@ -1,4 +1,4 @@
-import { NOTE_COLORS, circleSlices, musicKeys } from '../data/musicTheory.js';
+import { NOTE_COLORS, circleSlices, musicKeys, SCALES } from '../data/musicTheory.js';
 
 function pt(r, angleDeg) {
   const a = (angleDeg - 90) * Math.PI / 180;
@@ -27,20 +27,24 @@ const R_I_OUT  = 106;
 const R_I_IN   = 72;
 const R_CENTER = 58;
 
-export default function Circle({ selectedKey, onKeySelect, rotationAngle }) {
+export default function Circle({ selectedKey, onKeySelect, rotationAngle, parentKeyName, scaleMode }) {
   const selectedIndex = circleSlices.findIndex(
     s => s.major === selectedKey || s.minor === selectedKey
   );
   const isMajor = musicKeys[selectedKey]?.type === 'major';
 
-  const diatonicIdxs = [
-    selectedIndex,
-    (selectedIndex + 1) % 12,
-    (selectedIndex + 11) % 12,
-  ];
-
   const currentKeyInfo = musicKeys[selectedKey];
   const centerColor = NOTE_COLORS[currentKeyInfo?.rootPc ?? 0];
+
+  const isModal = !!parentKeyName;
+  const parentIndex = isModal ? circleSlices.findIndex(s => s.major === parentKeyName) : -1;
+  const circleRefIndex = isModal ? parentIndex : selectedIndex;
+
+  const diatonicIdxs = [
+    circleRefIndex,
+    (circleRefIndex + 1) % 12,
+    (circleRefIndex + 11) % 12,
+  ];
 
   const SIZE = 390;
   const MID = SIZE / 2;
@@ -69,8 +73,9 @@ export default function Circle({ selectedKey, onKeySelect, rotationAngle }) {
           const a1 = i * 30 - 15;
           const a2 = i * 30 + 15;
           const color = NOTE_COLORS[musicKeys[slice.major].rootPc];
-          const isActive = i === selectedIndex && isMajor;
-          const isDiatonic = diatonicIdxs.includes(i) && !isActive;
+          const isActive = isModal ? i === parentIndex : (i === selectedIndex && isMajor);
+          const isModalRoot = isModal && i === selectedIndex;
+          const isDiatonic = diatonicIdxs.includes(i) && !isActive && !isModalRoot;
 
           return (
             <g key={`maj-${i}`} onClick={() => onKeySelect(slice.major)} style={{ cursor: 'pointer' }}>
@@ -97,6 +102,16 @@ export default function Circle({ selectedKey, onKeySelect, rotationAngle }) {
                   </text>
                 );
               })()}
+              {isModalRoot && (
+                <path
+                  d={arcPath(R_M_IN, R_OUTER, a1, a2)}
+                  fill={`${color}15`}
+                  stroke={color}
+                  strokeWidth={2}
+                  strokeDasharray="5 3"
+                  style={{ pointerEvents: 'none' }}
+                />
+              )}
             </g>
           );
         })}
@@ -157,7 +172,7 @@ export default function Circle({ selectedKey, onKeySelect, rotationAngle }) {
         <text x={0} y={10} textAnchor="middle" dominantBaseline="middle"
           fontSize={11} fontWeight={500} fill="rgba(255,255,255,0.45)"
           style={{ fontFamily: 'system-ui, sans-serif' }}>
-          {currentKeyInfo?.type === 'major' ? 'Major' : 'Minor'}
+          {SCALES[scaleMode]?.label ?? (currentKeyInfo?.type === 'major' ? 'Major' : 'Minor')}
         </text>
         <text x={0} y={26} textAnchor="middle" dominantBaseline="middle"
           fontSize={9} fill="rgba(255,255,255,0.25)"

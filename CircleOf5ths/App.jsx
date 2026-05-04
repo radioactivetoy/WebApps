@@ -88,6 +88,33 @@ export default function App() {
     setScaleMode(mode);
     setSelectedChordDegree(null);
     setCustomChordHighlight(null);
+    const offset = SCALES[mode].parentOffset;
+    if (offset !== null) {
+      const parentPc = (currentKeyInfo.rootPc + offset) % 12;
+      const parentKey = Object.keys(musicKeys).find(
+        k => musicKeys[k].type === 'major' && musicKeys[k].rootPc === parentPc
+      );
+      const parentIdx = parentKey ? circleSlices.findIndex(s => s.major === parentKey) : -1;
+      if (parentIdx !== -1) {
+        setRotationAngle(prev => {
+          const cur = ((prev % 360) + 360) % 360;
+          const target = parentIdx * 30;
+          let diff = target - cur;
+          if (diff > 180) diff -= 360;
+          if (diff < -180) diff += 360;
+          return prev + diff;
+        });
+      }
+    } else {
+      setRotationAngle(prev => {
+        const cur = ((prev % 360) + 360) % 360;
+        const target = selectedIndex * 30;
+        let diff = target - cur;
+        if (diff > 180) diff -= 360;
+        if (diff < -180) diff += 360;
+        return prev + diff;
+      });
+    }
   }
 
   return (
@@ -112,6 +139,8 @@ export default function App() {
             selectedKey={selectedKey}
             onKeySelect={handleKeySelect}
             rotationAngle={rotationAngle}
+            parentKeyName={parentKeyName}
+            scaleMode={scaleMode}
           />
           <RelatedKeys
             selectedKey={selectedKey}
