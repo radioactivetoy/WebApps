@@ -93,18 +93,18 @@ export default function ChordFamilyTable({
               const textStyle = { color: `${color}AA` };
 
               return (
-                <div key={chord.degree} className="flex flex-col gap-0.5">
+                <div key={chord.degree} className="flex flex-row gap-0.5">
                   <button
                     onClick={() => onHighlightChord?.({ pcs: minorPcs, rootPc: iiRoot, name: minorName })}
-                    className="flex items-center justify-center py-1 rounded-md border text-center transition-all hover:opacity-75"
+                    className="flex-1 flex items-center justify-center py-1.5 rounded-md border text-center transition-all hover:opacity-75"
                     style={cellStyle}>
-                    <span className="text-[8px] font-semibold leading-none" style={textStyle}>{minorName}</span>
+                    <span className="text-[7px] font-semibold leading-none" style={textStyle}>{minorName}</span>
                   </button>
                   <button
                     onClick={() => onHighlightChord?.({ pcs: domPcs, rootPc: iiRoot, name: domName })}
-                    className="flex items-center justify-center py-1 rounded-md border text-center transition-all hover:opacity-75"
+                    className="flex-1 flex items-center justify-center py-1.5 rounded-md border text-center transition-all hover:opacity-75"
                     style={cellStyle}>
-                    <span className="text-[8px] font-semibold leading-none" style={textStyle}>{domName}</span>
+                    <span className="text-[7px] font-semibold leading-none" style={textStyle}>{domName}</span>
                   </button>
                 </div>
               );
