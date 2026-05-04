@@ -17,7 +17,7 @@ export default function AIAssistant({ currentKeyInfo, onHighlightChord }) {
     for (let i = 0; i < 3; i++) {
       try {
         const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${API_KEY}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent?key=${API_KEY}`,
           {
             method:'POST', headers:{'Content-Type':'application/json'},
             body: JSON.stringify({
