@@ -9,6 +9,7 @@ import DiatonicChords from './src/components/DiatonicChords.jsx';
 import RelatedKeys from './src/components/RelatedKeys.jsx';
 import AIAssistant from './src/components/AIAssistant.jsx';
 import ScaleSelector from './src/components/ScaleSelector.jsx';
+import RootPicker from './src/components/RootPicker.jsx';
 
 export default function App() {
   const [selectedKey, setSelectedKey]                   = useState('C');
@@ -136,6 +137,12 @@ export default function App() {
         scaleMode={scaleMode}
         onScaleModeChange={handleScaleModeChange}
         rootPc={currentKeyInfo.rootPc}
+      />
+      <RootPicker
+        rootPc={currentKeyInfo.rootPc}
+        scaleMode={scaleMode}
+        isFlat={isFlat}
+        onKeySelect={handleKeySelect}
       />
 
       <main className="max-w-[1350px] mx-auto px-6 py-5 flex gap-5">
