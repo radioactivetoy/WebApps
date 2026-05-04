@@ -15,7 +15,7 @@ export default function Staff({ currentKeyInfo, activeDrawScale, scaleLabel, key
       <p className="text-[10px] font-bold tracking-[2px] text-white/25 uppercase mb-3">
         Scale &amp; Key Signature — {label}
       </p>
-      <svg width="100%" height="80" viewBox="0 0 580 80" className="overflow-visible">
+      <svg width="100%" height="100" viewBox="0 0 580 100" className="overflow-visible">
         {STAFF_LINES.map(y => (
           <line key={y} x1={42} x2={572} y1={y} y2={y}
             stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
@@ -37,6 +37,7 @@ export default function Staff({ currentKeyInfo, activeDrawScale, scaleLabel, key
           const pc = noteToPc(note.replace(/[0-9]/g, ''));
           const color = NOTE_COLORS[pc] ?? 'rgba(255,255,255,0.6)';
           const isUpStem = y >= 38;
+          const noteName = note.replace(/\d/g, '');
           return (
             <g key={i}>
               {y >= 68 && Array.from({ length: Math.ceil((y - 63) / 10) }).map((_, li) => (
@@ -49,6 +50,11 @@ export default function Staff({ currentKeyInfo, activeDrawScale, scaleLabel, key
                 ? <line x1={x+6} x2={x+6} y1={y} y2={y-28} stroke={color} strokeWidth={1.5} />
                 : <line x1={x-6} x2={x-6} y1={y} y2={y+28} stroke={color} strokeWidth={1.5} />
               }
+              <text x={x} y={93} textAnchor="middle"
+                fontSize={10} fontWeight={600} fill={color}
+                style={{ fontFamily: 'system-ui, sans-serif' }}>
+                {noteName}
+              </text>
             </g>
           );
         })}
