@@ -9,6 +9,9 @@ import DiatonicChords from './src/components/DiatonicChords.jsx';
 import AIAssistant from './src/components/AIAssistant.jsx';
 import ScaleSelector from './src/components/ScaleSelector.jsx';
 import RootPicker from './src/components/RootPicker.jsx';
+import ScaleFormulaStrip from './src/components/ScaleFormulaStrip.jsx';
+import ModalInterchange from './src/components/ModalInterchange.jsx';
+import CommonProgressions from './src/components/CommonProgressions.jsx';
 
 export default function App() {
   const [selectedKey, setSelectedKey]                   = useState('C');
@@ -89,6 +92,17 @@ export default function App() {
     setChordVariant('triad');
   }
 
+  function handleHighlightChord(info) {
+    setCustomChordHighlight(info);
+    setSelectedChordDegree(null);
+  }
+
+  function handleProgressionStep(degree) {
+    if (degree === null) { setSelectedChordDegree(null); return; }
+    setSelectedChordDegree(degree);
+    setCustomChordHighlight(null);
+  }
+
   function handleScaleModeChange(mode) {
     setScaleMode(mode);
     setSelectedChordDegree(null);
@@ -143,6 +157,7 @@ export default function App() {
         onScaleModeChange={handleScaleModeChange}
         rootPc={currentKeyInfo.rootPc}
       />
+      <ScaleFormulaStrip scaleMode={scaleMode} />
 
       <main className="max-w-[1350px] mx-auto px-6 py-5 flex gap-5">
         {/* Left column */}
@@ -186,6 +201,19 @@ export default function App() {
             onChordSelect={handleChordSelect}
             chordVariant={chordVariant}
             onChordVariantChange={setChordVariant}
+            onHighlightChord={handleHighlightChord}
+          />
+          <CommonProgressions
+            scaleMode={scaleMode}
+            diatonicChords={diatonicChords}
+            onChordSelect={handleProgressionStep}
+          />
+          <ModalInterchange
+            activeScalePcs={activeScalePcs}
+            scaleMode={scaleMode}
+            rootPc={currentKeyInfo.rootPc}
+            isFlat={isFlat}
+            onHighlightChord={handleHighlightChord}
           />
           <AIAssistant
             currentKeyInfo={currentKeyInfo}
@@ -194,10 +222,7 @@ export default function App() {
             activeScalePcs={activeScalePcs}
             isFlat={isFlat}
             parentKeyName={parentKeyName}
-            onHighlightChord={info => {
-              setCustomChordHighlight(info);
-              setSelectedChordDegree(null);
-            }}
+            onHighlightChord={handleHighlightChord}
           />
         </div>
       </main>

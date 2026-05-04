@@ -1,5 +1,5 @@
 import { NOTE_COLORS, buildDiatonicChords,
-  majorHarmonicFn, minorHarmonicFn, HARMONIC_FN_COLORS } from '../data/musicTheory.js';
+  majorHarmonicFn, minorHarmonicFn, HARMONIC_FN_COLORS, pcToName } from '../data/musicTheory.js';
 
 const VARIANTS = [
   ['triad',      'Triad'],
@@ -25,7 +25,7 @@ const VARIANTS = [
 
 export default function DiatonicChords({
   activeScalePcs, scaleMode, isFlat,
-  selectedChordDegree, onChordSelect, chordVariant, onChordVariantChange
+  selectedChordDegree, onChordSelect, chordVariant, onChordVariantChange, onHighlightChord
 }) {
   const is7Note = activeScalePcs.length === 7;
   const showHarmonicFn = scaleMode === 'major' || scaleMode === 'minor';
@@ -95,6 +95,30 @@ export default function DiatonicChords({
               );
             })}
           </div>
+
+          {onHighlightChord && (
+            <div className="mt-3 pt-3 border-t border-white/[0.06]">
+              <span className="text-[9px] font-bold tracking-[2px] text-white/20 uppercase">Secondary Dominants</span>
+              <div className="grid grid-cols-7 gap-1.5 mt-2">
+                {chords.map(chord => {
+                  const secRoot = (chord.rootPc + 7) % 12;
+                  const secPcs = [0, 4, 7, 10].map(n => (secRoot + n) % 12);
+                  const secName = pcToName(secRoot, isFlat) + '7';
+                  const color = NOTE_COLORS[secRoot];
+                  return (
+                    <button
+                      key={chord.degree}
+                      onClick={() => onHighlightChord({ pcs: secPcs, rootPc: secRoot, name: secName })}
+                      className="flex flex-col items-center justify-center py-1.5 px-1 rounded-lg border text-center transition-all hover:opacity-80"
+                      style={{ background: `${color}10`, borderColor: `${color}30` }}>
+                      <span className="text-[8px] text-white/25">V7/{chord.numeral}</span>
+                      <span className="text-[10px] font-semibold mt-0.5" style={{ color: `${color}CC` }}>{secName}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {selectedTriad && (
             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/[0.06] flex-wrap">

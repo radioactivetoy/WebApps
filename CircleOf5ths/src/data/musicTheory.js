@@ -129,21 +129,21 @@ export const minorSteps = 'W - H - W - W - H - W - W';
 // ── Scale definitions ─────────────────────────────────────────────────────────
 // parentOffset: semitones to add to rootPc to get the parent major key root (modes only)
 export const SCALES = {
-  'major':      { label: 'Major',    intervals: [0,2,4,5,7,9,11], parentOffset: null },
-  'dorian':     { label: 'Dorian',   intervals: [0,2,3,5,7,9,10], parentOffset: 10   },
-  'phrygian':   { label: 'Phrygian', intervals: [0,1,3,5,7,8,10], parentOffset: 8    },
-  'lydian':     { label: 'Lydian',   intervals: [0,2,4,6,7,9,11], parentOffset: 7    },
-  'mixolydian': { label: 'Mixo',     intervals: [0,2,4,5,7,9,10], parentOffset: 5    },
-  'minor':      { label: 'Minor',    intervals: [0,2,3,5,7,8,10], parentOffset: null },
-  'locrian':    { label: 'Locrian',  intervals: [0,1,3,5,6,8,10], parentOffset: 1    },
-  'maj-pent':   { label: 'Maj Pent', intervals: [0,2,4,7,9],      parentOffset: null },
-  'min-pent':   { label: 'Min Pent', intervals: [0,3,5,7,10],     parentOffset: null },
-  'blues':      { label: 'Blues',    intervals: [0,3,5,6,7,10],   parentOffset: null },
-  'mel-minor':  { label: 'Mel Min',  intervals: [0,2,3,5,7,9,11], parentOffset: null },
-  'lyd-dom':    { label: 'Lyd Dom',  intervals: [0,2,4,6,7,9,10], parentOffset: null },
-  'altered':    { label: 'Altered',  intervals: [0,1,3,4,6,8,10], parentOffset: null },
-  'harm-minor': { label: 'Harm Min', intervals: [0,2,3,5,7,8,11], parentOffset: null },
-  'phryg-dom':  { label: 'Phryg Dom',intervals: [0,1,4,5,7,8,10], parentOffset: null },
+  'major':      { label: 'Major',     intervals: [0,2,4,5,7,9,11], parentOffset: null, colorNotes: [],                     context: 'Pop, rock, classical'       },
+  'dorian':     { label: 'Dorian',    intervals: [0,2,3,5,7,9,10], parentOffset: 10,   colorNotes: ['♮6'],                  context: 'Jazz, funk, rock'            },
+  'phrygian':   { label: 'Phrygian',  intervals: [0,1,3,5,7,8,10], parentOffset: 8,    colorNotes: ['b2'],                  context: 'Flamenco, metal'             },
+  'lydian':     { label: 'Lydian',    intervals: [0,2,4,6,7,9,11], parentOffset: 7,    colorNotes: ['#4'],                  context: 'Film, dream pop'             },
+  'mixolydian': { label: 'Mixo',      intervals: [0,2,4,5,7,9,10], parentOffset: 5,    colorNotes: ['b7'],                  context: 'Rock, blues, folk'           },
+  'minor':      { label: 'Minor',     intervals: [0,2,3,5,7,8,10], parentOffset: null, colorNotes: [],                     context: 'Rock, pop, classical'        },
+  'locrian':    { label: 'Locrian',   intervals: [0,1,3,5,6,8,10], parentOffset: 1,    colorNotes: ['b2', 'b5'],            context: 'Metal, avant-garde'          },
+  'maj-pent':   { label: 'Maj Pent',  intervals: [0,2,4,7,9],      parentOffset: null, colorNotes: [],                     context: 'Country, folk, rock'         },
+  'min-pent':   { label: 'Min Pent',  intervals: [0,3,5,7,10],     parentOffset: null, colorNotes: [],                     context: 'Blues, rock, R&B'            },
+  'blues':      { label: 'Blues',     intervals: [0,3,5,6,7,10],   parentOffset: null, colorNotes: ['b5'],                  context: 'Blues, jazz, rock'           },
+  'mel-minor':  { label: 'Mel Min',   intervals: [0,2,3,5,7,9,11], parentOffset: null, colorNotes: ['♮6', '♮7'],           context: 'Jazz, classical'             },
+  'lyd-dom':    { label: 'Lyd Dom',   intervals: [0,2,4,6,7,9,10], parentOffset: null, colorNotes: ['#4', 'b7'],            context: 'Jazz fusion, film'           },
+  'altered':    { label: 'Altered',   intervals: [0,1,3,4,6,8,10], parentOffset: null, colorNotes: ['b9', '#9', '#11', 'b13'], context: 'Jazz, tension'            },
+  'harm-minor': { label: 'Harm Min',  intervals: [0,2,3,5,7,8,11], parentOffset: null, colorNotes: ['♮7'],                  context: 'Classical, metal, flamenco' },
+  'phryg-dom':  { label: 'Phryg Dom', intervals: [0,1,4,5,7,8,10], parentOffset: null, colorNotes: ['b2', 'M3'],            context: 'Flamenco, Middle Eastern'    },
 };
 
 // Maps each pc to the natural letter used for its staff position.
