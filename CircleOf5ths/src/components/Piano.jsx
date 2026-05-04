@@ -64,7 +64,7 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
                 <rect x={x} y={1} width={WHITE_W - 2} height={WHITE_H}
                   rx={4} fill={fill} stroke="rgba(255,255,255,0.08)" strokeWidth={1} />
                 {isChordActive && <rect x={x} y={1} width={WHITE_W - 2} height={WHITE_H}
-                  rx={4} fill="none" stroke="white" strokeWidth={2} />}
+                  rx={4} fill="none" stroke="rgba(0,0,0,0.7)" strokeWidth={2.5} />}
                 {labelMode === 'intervals' ? (() => {
                   const iv = intervalData(k.pc);
                   return (
@@ -103,7 +103,7 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
                 <rect x={x} y={1} width={BLACK_W} height={BLACK_H}
                   rx={3} fill={fill} stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
                 {isChordActive && <rect x={x} y={1} width={BLACK_W} height={BLACK_H}
-                  rx={3} fill="none" stroke="white" strokeWidth={2} />}
+                  rx={3} fill="none" stroke="rgba(0,0,0,0.7)" strokeWidth={2.5} />}
                 <text x={x + BLACK_W / 2} y={BLACK_H - 7}
                   textAnchor="middle" fontSize={9} fontWeight={700}
                   fill={textFill} style={{ fontFamily: 'system-ui, sans-serif' }}>
