@@ -133,16 +133,16 @@ export default function App() {
         parentKeyName={parentKeyName}
         onKeySelect={handleKeySelect}
       />
-      <ScaleSelector
-        scaleMode={scaleMode}
-        onScaleModeChange={handleScaleModeChange}
-        rootPc={currentKeyInfo.rootPc}
-      />
       <RootPicker
         rootPc={currentKeyInfo.rootPc}
         scaleMode={scaleMode}
         isFlat={isFlat}
         onKeySelect={handleKeySelect}
+      />
+      <ScaleSelector
+        scaleMode={scaleMode}
+        onScaleModeChange={handleScaleModeChange}
+        rootPc={currentKeyInfo.rootPc}
       />
 
       <main className="max-w-[1350px] mx-auto px-6 py-5 flex gap-5">
