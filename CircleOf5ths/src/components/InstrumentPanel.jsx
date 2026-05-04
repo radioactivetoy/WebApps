@@ -5,24 +5,25 @@ import GuitarDiagram from './GuitarDiagram.jsx';
 
 export default function InstrumentPanel({
   currentKeyInfo,
+  activeScalePcs,
   activeChordPcs, activeChordRoot, activeName,
   isFlat, labelMode, onLabelModeChange,
   instrumentMode, onInstrumentModeChange,
   selectedChordDegree,
 }) {
+  const { rootPc } = currentKeyInfo;
   const { playScale, playChord, isPlaying } = useAudio();
-  const { scalePcs, rootPc } = currentKeyInfo;
 
   const chips = activeChordPcs
     ? activeChordPcs.map(pc => ({ pc, label: pcToName(pc, isFlat) }))
-    : scalePcs.map(pc => ({ pc, label: pcToName(pc, isFlat) }));
+    : activeScalePcs.map(pc => ({ pc, label: pcToName(pc, isFlat) }));
 
   function handlePlay() {
     if (isPlaying) return;
     if (activeChordPcs) {
       playChord(activeChordPcs, 4, 'arpeggio');
     } else {
-      playScale(scalePcs, 4);
+      playScale(activeScalePcs, 4);
     }
   }
 
@@ -66,6 +67,7 @@ export default function InstrumentPanel({
       {instrumentMode === 'piano' ? (
         <Piano
           currentKeyInfo={currentKeyInfo}
+          activeScalePcs={activeScalePcs}
           activeChordPcs={activeChordPcs}
           activeChordRoot={activeChordRoot}
           isFlat={isFlat}

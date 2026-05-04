@@ -8,8 +8,9 @@ const BLACK_H = 78;
 function whiteX(whiteIdx) { return whiteIdx * WHITE_W + 1; }
 function blackX(whiteIdx) { return whiteIdx * WHITE_W + WHITE_W - BLACK_W / 2 + 1; }
 
-export default function Piano({ currentKeyInfo, activeChordPcs, activeChordRoot, isFlat, labelMode }) {
-  const { scalePcs, rootPc } = currentKeyInfo;
+export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, activeChordRoot, isFlat, labelMode }) {
+  const { rootPc } = currentKeyInfo;
+  const scalePcs = activeScalePcs;
   const whiteKeys = PIANO_KEYS.filter(k => !k.isBlack);
   const blackKeys = PIANO_KEYS.filter(k => k.isBlack);
   const totalWhite = whiteKeys.length;
