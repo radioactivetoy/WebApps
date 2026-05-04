@@ -8,7 +8,7 @@ const BLACK_H = 78;
 function whiteX(whiteIdx) { return whiteIdx * WHITE_W + 1; }
 function blackX(whiteIdx) { return whiteIdx * WHITE_W + WHITE_W - BLACK_W / 2 + 1; }
 
-export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, activeChordRoot, isFlat, labelMode }) {
+export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, activeChordRoot, isFlat, labelMode, scaleLabel }) {
   const { rootPc } = currentKeyInfo;
   const scalePcs = activeScalePcs;
   const whiteKeys = PIANO_KEYS.filter(k => !k.isBlack);
@@ -43,7 +43,7 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
     <div className="rounded-2xl px-5 py-4"
       style={{ background: 'rgba(255,255,255,0.045)', border: '1px solid rgba(255,255,255,0.09)' }}>
       <p className="text-[10px] font-bold tracking-[2px] text-white/25 uppercase mb-3">
-        Piano · {activeChordPcs ? (activeChordRoot !== undefined ? pcToName(activeChordRoot, isFlat) + ' chord' : 'chord') : currentKeyInfo.label + ' scale'}
+        Piano · {activeChordPcs ? (activeChordRoot !== undefined ? pcToName(activeChordRoot, isFlat) + ' chord' : 'chord') : scaleLabel ?? currentKeyInfo.label}
       </p>
       <div className="overflow-x-auto">
         <svg

@@ -9,7 +9,7 @@ export default function InstrumentPanel({
   activeChordPcs, activeChordRoot, activeName,
   isFlat, labelMode, onLabelModeChange,
   instrumentMode, onInstrumentModeChange,
-  selectedChordDegree,
+  selectedChordDegree, scaleLabel,
 }) {
   const { rootPc } = currentKeyInfo;
   const { playScale, playChord, isPlaying } = useAudio();
@@ -72,6 +72,7 @@ export default function InstrumentPanel({
           activeChordRoot={activeChordRoot}
           isFlat={isFlat}
           labelMode={labelMode}
+          scaleLabel={scaleLabel}
         />
       ) : (
         <div className="mt-1 mb-1">

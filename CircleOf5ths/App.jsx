@@ -21,7 +21,6 @@ export default function App() {
   const [rotationAngle, setRotationAngle]               = useState(0);
 
   const currentKeyInfo = musicKeys[selectedKey];
-  const isFlat = currentKeyInfo.accType === 'flat';
   const selectedIndex = circleSlices.findIndex(
     s => s.major === selectedKey || s.minor === selectedKey
   );
@@ -30,14 +29,6 @@ export default function App() {
   const activeScalePcs = useMemo(() =>
     SCALES[scaleMode].intervals.map(i => (currentKeyInfo.rootPc + i) % 12),
     [scaleMode, currentKeyInfo.rootPc]
-  );
-
-  // Draw scale (note names with octaves) for Staff
-  const activeDrawScale = useMemo(() =>
-    (scaleMode === 'major' || scaleMode === 'minor')
-      ? currentKeyInfo.drawScale
-      : computeDrawScale(currentKeyInfo.rootPc, activeScalePcs, isFlat),
-    [scaleMode, currentKeyInfo, activeScalePcs, isFlat]
   );
 
   // Parent key name for modal scales — returns a musicKeys key like 'Bb', 'F', 'G'
@@ -49,6 +40,19 @@ export default function App() {
       k => musicKeys[k].type === 'major' && musicKeys[k].rootPc === parentPc
     ) ?? null;
   }, [scaleMode, currentKeyInfo.rootPc]);
+
+  // Enharmonic preference follows the parent key for modal scales
+  const isFlat = (parentKeyName ? musicKeys[parentKeyName] : currentKeyInfo).accType === 'flat';
+
+  // Draw scale (note names with octaves) for Staff
+  const activeDrawScale = useMemo(() =>
+    (scaleMode === 'major' || scaleMode === 'minor')
+      ? currentKeyInfo.drawScale
+      : computeDrawScale(currentKeyInfo.rootPc, activeScalePcs, isFlat),
+    [scaleMode, currentKeyInfo, activeScalePcs, isFlat]
+  );
+
+  const scaleLabel = `${currentKeyInfo.label.split(' ')[0]} ${SCALES[scaleMode].label}`;
 
   useEffect(() => {
     setSelectedChordDegree(null);
@@ -155,7 +159,7 @@ export default function App() {
           <Staff
             currentKeyInfo={currentKeyInfo}
             activeDrawScale={activeDrawScale}
-            scaleLabel={`${currentKeyInfo.label.split(' ')[0]} ${SCALES[scaleMode].label}`}
+            scaleLabel={scaleLabel}
             keySignature={parentKeyName ? musicKeys[parentKeyName] : currentKeyInfo}
           />
           <InstrumentPanel
@@ -170,6 +174,7 @@ export default function App() {
             instrumentMode={instrumentMode}
             onInstrumentModeChange={setInstrumentMode}
             selectedChordDegree={selectedChordDegree}
+            scaleLabel={scaleLabel}
           />
           <DiatonicChords
             activeScalePcs={activeScalePcs}
