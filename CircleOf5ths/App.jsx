@@ -6,7 +6,6 @@ import Circle from './src/components/Circle.jsx';
 import Staff from './src/components/Staff.jsx';
 import InstrumentPanel from './src/components/InstrumentPanel.jsx';
 import DiatonicChords from './src/components/DiatonicChords.jsx';
-import RelatedKeys from './src/components/RelatedKeys.jsx';
 import AIAssistant from './src/components/AIAssistant.jsx';
 import ScaleSelector from './src/components/ScaleSelector.jsx';
 import RootPicker from './src/components/RootPicker.jsx';
@@ -154,11 +153,6 @@ export default function App() {
             rotationAngle={rotationAngle}
             parentKeyName={parentKeyName}
             scaleMode={scaleMode}
-          />
-          <RelatedKeys
-            selectedKey={selectedKey}
-            currentKeyInfo={currentKeyInfo}
-            onKeySelect={handleKeySelect}
           />
         </div>
 
