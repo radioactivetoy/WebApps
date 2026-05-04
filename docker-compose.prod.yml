@@ -2,5 +2,5 @@ services:
   apps:
     image: webapps:latest
     ports:
-      - "80:80"
+      - "5080:80"
     restart: unless-stopped
