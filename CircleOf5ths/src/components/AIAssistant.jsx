@@ -96,7 +96,11 @@ Use only notes from the scale. Return ONLY valid JSON:
             style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)' }}>
             <select value={genre} onChange={e => setGenre(e.target.value)}
               className="text-xs text-white/70 bg-transparent outline-none cursor-pointer">
-              {['Pop','Jazz','Classical','R&B','Cinematic'].map(g => (
+              {[
+                'Pop','Rock','Metal','Funk','R&B','Soul','Gospel',
+                'Jazz','Bossa Nova','Blues','Country','Folk','Flamenco',
+                'Hip-Hop','Electronic','Ambient','Latin','Cinematic','Classical','Neo-Soul',
+              ].map(g => (
                 <option key={g} value={g} style={{ background:'#1e1b4b' }}>{g}</option>
               ))}
             </select>
