@@ -14,6 +14,13 @@ const VARIANTS = [
   ['sus4',       'Sus4'],
   ['add9',       'Add9'],
   ['add11',      'Add11'],
+  [null,         'Altered'],
+  ['dom7b9',     '7b9'],
+  ['dom7s9',     '7#9'],
+  ['dom7s11',    '7#11'],
+  ['dom7alt',    '7alt'],
+  ['chrom-dim7', 'dim7'],
+  ['chrom-aug',  'Aug+'],
 ];
 
 export default function DiatonicChords({
@@ -94,13 +101,17 @@ export default function DiatonicChords({
               <span className="text-[10px] text-white/25 uppercase font-bold tracking-widest flex-shrink-0">
                 Voicing
               </span>
-              <div className="flex gap-1 flex-wrap">
-                {VARIANTS.map(([val, label]) => (
+              <div className="flex gap-1 flex-wrap items-center">
+                {VARIANTS.map(([val, label]) => val === null ? (
+                  <span key="sep" className="text-[9px] font-bold tracking-widest uppercase text-white/20 mx-1">
+                    {label}
+                  </span>
+                ) : (
                   <button key={val}
                     onClick={() => onChordVariantChange(val)}
                     className="px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors"
                     style={chordVariant === val
-                      ? { background: `${selectedTriad.color}30`, borderColor: `${selectedTriad.color}60`, border: `1px solid`, color: selectedTriad.color }
+                      ? { background: `${selectedTriad.color}30`, border: `1px solid ${selectedTriad.color}60`, color: selectedTriad.color }
                       : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)' }}>
                     {label}
                   </button>

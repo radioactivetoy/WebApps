@@ -256,6 +256,31 @@ export function buildDiatonicChords(scalePcs, isFlat, chordType) {
         else        { suf7s='7sus4';    numeral=roman+'7sus4';     }
         name = root + suf7s; pcs = [rootPc, fourth, fifth, seventh]; break;
       }
+      // ── Non-diatonic / chromatic variants (fixed semitone intervals from root) ──
+      case 'dom7b9':
+        numeral = roman + '7b9';
+        name = root + '7b9';
+        pcs = [0,4,7,10,1].map(n => (rootPc+n)%12); break;
+      case 'dom7s9':
+        numeral = roman + '7#9';
+        name = root + '7#9';
+        pcs = [0,4,7,10,3].map(n => (rootPc+n)%12); break;
+      case 'dom7s11':
+        numeral = roman + '7#11';
+        name = root + '7#11';
+        pcs = [0,4,7,10,6].map(n => (rootPc+n)%12); break;
+      case 'dom7alt':
+        numeral = roman + '7alt';
+        name = root + '7alt';
+        pcs = [0,4,6,10,1].map(n => (rootPc+n)%12); break;
+      case 'chrom-dim7':
+        numeral = roman.toLowerCase() + '°7';
+        name = root + '°7';
+        pcs = [0,3,6,9].map(n => (rootPc+n)%12); break;
+      case 'chrom-aug':
+        numeral = roman + '+';
+        name = root + 'aug';
+        pcs = [0,4,8].map(n => (rootPc+n)%12); break;
       default: // triad
         name = root + suffix; pcs = [rootPc, third, fifth]; break;
     }
