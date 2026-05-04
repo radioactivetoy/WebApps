@@ -93,6 +93,9 @@ export default function InstrumentPanel({
         />
       ) : (
         <div className="mt-1 mb-1">
+          <p className="text-[10px] font-bold tracking-[2px] text-white/25 uppercase mb-3">
+            Guitar · {activeChordPcs ? (activeChordRoot !== undefined ? pcToName(activeChordRoot, isFlat) + ' chord' : 'chord') : scaleLabel}
+          </p>
           <GuitarFretboard
             activeScalePcs={activeScalePcs}
             activeChordPcs={activeChordPcs}

@@ -162,74 +162,79 @@ export default function App() {
         onScaleModeChange={handleScaleModeChange}
         rootPc={currentKeyInfo.rootPc}
       />
-      <main className="max-w-[1350px] mx-auto px-6 py-5 flex gap-5">
-        {/* Left column */}
-        <div className="flex-shrink-0 flex flex-col gap-4 w-[420px]">
-          <Circle
-            selectedKey={selectedKey}
-            onKeySelect={handleKeySelect}
-            rotationAngle={rotationAngle}
-            parentKeyName={parentKeyName}
-            scaleMode={scaleMode}
-          />
-          <ScaleFormulaStrip scaleMode={scaleMode} />
-        </div>
+      <main className="max-w-[1350px] mx-auto px-6 py-5 flex flex-col gap-5">
+        {/* Full-width instrument panel */}
+        <InstrumentPanel
+          currentKeyInfo={currentKeyInfo}
+          activeScalePcs={activeScalePcs}
+          activeChordPcs={activePcs}
+          activeChordRoot={activeRoot}
+          activeName={activeName}
+          isFlat={isFlat}
+          labelMode={labelMode}
+          onLabelModeChange={setLabelMode}
+          instrumentMode={instrumentMode}
+          onInstrumentModeChange={setInstrumentMode}
+          selectedChordDegree={selectedChordDegree}
+          scaleLabel={scaleLabel}
+          colorNotePcs={colorNotePcs}
+        />
 
-        {/* Right column */}
-        <div className="flex-1 flex flex-col gap-4 min-w-0">
-          <Staff
-            currentKeyInfo={currentKeyInfo}
-            activeDrawScale={activeDrawScale}
-            scaleLabel={scaleLabel}
-            keySignature={parentKeyName ? musicKeys[parentKeyName] : currentKeyInfo}
-          />
-          <InstrumentPanel
-            currentKeyInfo={currentKeyInfo}
-            activeScalePcs={activeScalePcs}
-            activeChordPcs={activePcs}
-            activeChordRoot={activeRoot}
-            activeName={activeName}
-            isFlat={isFlat}
-            labelMode={labelMode}
-            onLabelModeChange={setLabelMode}
-            instrumentMode={instrumentMode}
-            onInstrumentModeChange={setInstrumentMode}
-            selectedChordDegree={selectedChordDegree}
-            scaleLabel={scaleLabel}
-            colorNotePcs={colorNotePcs}
-          />
-          <DiatonicChords
-            activeScalePcs={activeScalePcs}
-            scaleMode={scaleMode}
-            isFlat={isFlat}
-            selectedChordDegree={selectedChordDegree}
-            onChordSelect={handleChordSelect}
-            chordVariant={chordVariant}
-            onChordVariantChange={setChordVariant}
-          />
-          <ChordFamilyTable
-            activeScalePcs={activeScalePcs}
-            scaleMode={scaleMode}
-            rootPc={currentKeyInfo.rootPc}
-            isFlat={isFlat}
-            selectedChordDegree={selectedChordDegree}
-            onChordSelect={handleChordSelect}
-            onHighlightChord={handleHighlightChord}
-          />
-          <CommonProgressions
-            scaleMode={scaleMode}
-            diatonicChords={diatonicChords}
-            onChordSelect={handleProgressionStep}
-          />
-          <AIAssistant
-            currentKeyInfo={currentKeyInfo}
-            scaleLabel={scaleLabel}
-            scaleMode={scaleMode}
-            activeScalePcs={activeScalePcs}
-            isFlat={isFlat}
-            parentKeyName={parentKeyName}
-            onHighlightChord={handleHighlightChord}
-          />
+        {/* Two-column area */}
+        <div className="flex gap-5">
+          {/* Left column */}
+          <div className="flex-shrink-0 flex flex-col gap-4 w-[420px]">
+            <Circle
+              selectedKey={selectedKey}
+              onKeySelect={handleKeySelect}
+              rotationAngle={rotationAngle}
+              parentKeyName={parentKeyName}
+              scaleMode={scaleMode}
+            />
+            <ScaleFormulaStrip scaleMode={scaleMode} />
+          </div>
+
+          {/* Right column */}
+          <div className="flex-1 flex flex-col gap-4 min-w-0">
+            <Staff
+              currentKeyInfo={currentKeyInfo}
+              activeDrawScale={activeDrawScale}
+              scaleLabel={scaleLabel}
+              keySignature={parentKeyName ? musicKeys[parentKeyName] : currentKeyInfo}
+            />
+            <DiatonicChords
+              activeScalePcs={activeScalePcs}
+              scaleMode={scaleMode}
+              isFlat={isFlat}
+              selectedChordDegree={selectedChordDegree}
+              onChordSelect={handleChordSelect}
+              chordVariant={chordVariant}
+              onChordVariantChange={setChordVariant}
+            />
+            <ChordFamilyTable
+              activeScalePcs={activeScalePcs}
+              scaleMode={scaleMode}
+              rootPc={currentKeyInfo.rootPc}
+              isFlat={isFlat}
+              selectedChordDegree={selectedChordDegree}
+              onChordSelect={handleChordSelect}
+              onHighlightChord={handleHighlightChord}
+            />
+            <CommonProgressions
+              scaleMode={scaleMode}
+              diatonicChords={diatonicChords}
+              onChordSelect={handleProgressionStep}
+            />
+            <AIAssistant
+              currentKeyInfo={currentKeyInfo}
+              scaleLabel={scaleLabel}
+              scaleMode={scaleMode}
+              activeScalePcs={activeScalePcs}
+              isFlat={isFlat}
+              parentKeyName={parentKeyName}
+              onHighlightChord={handleHighlightChord}
+            />
+          </div>
         </div>
       </main>
     </div>

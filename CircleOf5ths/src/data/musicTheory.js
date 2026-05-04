@@ -146,7 +146,7 @@ export const SCALES = {
   'phrygian':   { label: 'Phrygian',  intervals: [0,1,3,5,7,8,10], parentOffset: 8,    colorNotes: ['b2'],                  context: 'Flamenco, metal'             },
   'lydian':     { label: 'Lydian',    intervals: [0,2,4,6,7,9,11], parentOffset: 7,    colorNotes: ['#4'],                  context: 'Film, dream pop'             },
   'mixolydian': { label: 'Mixo',      intervals: [0,2,4,5,7,9,10], parentOffset: 5,    colorNotes: ['b7'],                  context: 'Rock, blues, folk'           },
-  'minor':      { label: 'Minor',     intervals: [0,2,3,5,7,8,10], parentOffset: null, colorNotes: [],                     context: 'Rock, pop, classical'        },
+  'minor':      { label: 'Minor',     intervals: [0,2,3,5,7,8,10], parentOffset: 3,    colorNotes: [],                     context: 'Rock, pop, classical'        },
   'locrian':    { label: 'Locrian',   intervals: [0,1,3,5,6,8,10], parentOffset: 1,    colorNotes: ['b2', 'b5'],            context: 'Metal, avant-garde'          },
   'maj-pent':   { label: 'Maj Pent',  intervals: [0,2,4,7,9],      parentOffset: null, colorNotes: [],                     context: 'Country, folk, rock'         },
   'min-pent':   { label: 'Min Pent',  intervals: [0,3,5,7,10],     parentOffset: null, colorNotes: [],                     context: 'Blues, rock, R&B'            },

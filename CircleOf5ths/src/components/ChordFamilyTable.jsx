@@ -2,8 +2,18 @@ import { NOTE_COLORS, buildDiatonicChords,
   majorHarmonicFn, minorHarmonicFn, HARMONIC_FN_COLORS, pcToName } from '../data/musicTheory.js';
 
 const PARALLEL_INTERVALS = {
-  major: [0, 2, 3, 5, 7, 8, 10],
-  minor: [0, 2, 4, 5, 7, 9, 11],
+  major:       [0, 2, 3, 5, 7, 8, 10], // borrow from parallel minor
+  dorian:      [0, 2, 4, 5, 7, 9, 11], // borrow from parallel major
+  phrygian:    [0, 2, 4, 5, 7, 9, 11],
+  lydian:      [0, 2, 3, 5, 7, 8, 10],
+  mixolydian:  [0, 2, 3, 5, 7, 8, 10],
+  minor:       [0, 2, 4, 5, 7, 9, 11], // borrow from parallel major
+  locrian:     [0, 2, 4, 5, 7, 9, 11],
+  'mel-minor':    [0, 2, 4, 5, 7, 9, 11],
+  'harm-minor':   [0, 2, 4, 5, 7, 9, 11],
+  'lyd-dom':      [0, 2, 3, 5, 7, 8, 10],
+  'phryg-dom':    [0, 2, 4, 5, 7, 9, 11],
+  'altered':      [0, 2, 4, 5, 7, 9, 11],
 };
 
 const DEGREE_LABELS = ['I','bII','II','bIII','III','IV','bV','V','bVI','VI','bVII','VII'];

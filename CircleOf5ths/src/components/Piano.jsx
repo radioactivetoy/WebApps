@@ -3,150 +3,162 @@ import { NOTE_COLORS, PIANO_KEYS, pcToName, INTERVAL_LABELS } from '../data/musi
 const WHITE_W = 40;
 const WHITE_H = 130;
 const BLACK_W = 24;
-const BLACK_H = 78;
+const BLACK_H = 80;
+const W_R = 12;   // dot radius on white keys
+const B_R = 9;    // dot radius on black keys
 
-function whiteX(whiteIdx) { return whiteIdx * WHITE_W + 1; }
-function blackX(whiteIdx) { return whiteIdx * WHITE_W + WHITE_W - BLACK_W / 2 + 1; }
+function whiteX(n) { return n * WHITE_W; }
+function blackX(n) { return (n + 1) * WHITE_W - BLACK_W / 2; }
+
+function kPath(x, w, h, r) {
+  return `M${x} 0L${x+w} 0L${x+w} ${h-r}Q${x+w} ${h} ${x+w-r} ${h}L${x+r} ${h}Q${x} ${h} ${x} ${h-r}Z`;
+}
 
 export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, activeChordRoot, isFlat, labelMode, scaleLabel, colorPcs }) {
   const { rootPc } = currentKeyInfo;
-  const scalePcs = activeScalePcs;
-  const whiteKeys = PIANO_KEYS.filter(k => !k.isBlack);
-  const blackKeys = PIANO_KEYS.filter(k => k.isBlack);
+  const scalePcsSet  = new Set(activeScalePcs);
+  const chordPcsSet  = activeChordPcs ? new Set(activeChordPcs) : null;
+  const highlightRoot = activeChordRoot ?? rootPc;
+  const intervalRef   = activeChordRoot ?? rootPc;
+
+  const whiteKeys  = PIANO_KEYS.filter(k => !k.isBlack);
+  const blackKeys  = PIANO_KEYS.filter(k => k.isBlack);
   const totalWhite = whiteKeys.length;
+  const VB_W = totalWhite * WHITE_W;
+  const VB_H = WHITE_H + 8;
 
-  function keyState(pc) {
-    const c = NOTE_COLORS[pc];
-    if (activeChordPcs) {
-      const inChord = pc === activeChordRoot || activeChordPcs.includes(pc);
-      const inScale = scalePcs.includes(pc);
-      if (inChord && !inScale) return { fill: null, active: true, dim: false }; // non-diatonic: white + border only
-      if (inChord)             return { fill: c,    active: true, dim: false };
-      if (inScale)             return { fill: `${c}40`, active: false, dim: true };
-      return { fill: null, active: false, dim: false };
+  function showDot(pc) {
+    if (chordPcsSet) return chordPcsSet.has(pc) || scalePcsSet.has(pc);
+    return scalePcsSet.has(pc);
+  }
+
+  function dotOpacity(pc) {
+    if (!chordPcsSet) return 1;
+    return chordPcsSet.has(pc) ? 1 : 0.2;
+  }
+
+  function isNonDia(pc) {
+    return !!(chordPcsSet?.has(pc) && !scalePcsSet.has(pc));
+  }
+
+  function dotLabel(pc) {
+    if (labelMode === 'intervals') {
+      const diff = (pc - intervalRef + 12) % 12;
+      return INTERVAL_LABELS[diff].short;
     }
-    if (pc === rootPc || scalePcs.includes(pc))
-      return { fill: c, active: true, dim: false };
-    return { fill: null, active: false, dim: false };
-  }
-
-  function intervalData(pc) {
-    const ref = activeChordRoot !== undefined ? activeChordRoot : rootPc;
-    const diff = (pc - ref + 12) % 12;
-    return INTERVAL_LABELS[diff];
-  }
-
-  function noteName(pc) {
     return pcToName(pc, isFlat);
   }
 
-  return (
-    <div className="rounded-2xl px-5 py-4"
-      style={{ background: 'rgba(255,255,255,0.045)', border: '1px solid rgba(255,255,255,0.09)' }}>
-      <p className="text-[10px] font-bold tracking-[2px] text-white/25 uppercase mb-3">
-        Piano · {activeChordPcs ? (activeChordRoot !== undefined ? pcToName(activeChordRoot, isFlat) + ' chord' : 'chord') : scaleLabel ?? currentKeyInfo.label}
-      </p>
-      <div className="overflow-x-auto">
-        <svg
-          width={totalWhite * WHITE_W + 2}
-          height={WHITE_H + 10}
-          viewBox={`0 0 ${totalWhite * WHITE_W + 2} ${WHITE_H + 10}`}
-          style={{ display: 'block', minWidth: totalWhite * WHITE_W + 2 }}
-        >
-          {/* White keys */}
-          {whiteKeys.map(k => {
-            const state = keyState(k.pc);
-            const fill = state.fill ?? '#f5f5f5';
-            const textFill = state.active ? 'rgba(0,0,0,0.8)' : state.dim ? NOTE_COLORS[k.pc] : '#888';
-            const isChordActive = state.active && !!activeChordPcs;
-            const x = whiteX(k.whiteIdx);
-            return (
-              <g key={k.note}>
-                <rect x={x} y={1} width={WHITE_W - 2} height={WHITE_H}
-                  rx={4} fill={fill} stroke="rgba(255,255,255,0.08)" strokeWidth={1} />
-                {isChordActive && <rect x={x} y={1} width={WHITE_W - 2} height={WHITE_H}
-                  rx={4} fill="none" stroke="rgba(0,0,0,0.7)" strokeWidth={2.5} />}
-                {colorPcs?.has(k.pc) && state.active && (
-                  <circle cx={x + (WHITE_W - 2) / 2} cy={10} r={3.5} fill="rgba(251,191,36,0.9)" />
-                )}
-                {labelMode === 'intervals' ? (() => {
-                  const iv = intervalData(k.pc);
-                  return (
-                    <>
-                      <text x={x + (WHITE_W - 2) / 2} y={WHITE_H - 20}
-                        textAnchor="middle" fontSize={9} fontWeight={700}
-                        fill={textFill} style={{ fontFamily: 'system-ui, sans-serif' }}>
-                        {iv.line1}
-                      </text>
-                      <text x={x + (WHITE_W - 2) / 2} y={WHITE_H - 8}
-                        textAnchor="middle" fontSize={10} fontWeight={800}
-                        fill={textFill} style={{ fontFamily: 'system-ui, sans-serif' }}>
-                        {iv.line2}
-                      </text>
-                    </>
-                  );
-                })() : (
-                  <text x={x + (WHITE_W - 2) / 2} y={WHITE_H - 7}
-                    textAnchor="middle" fontSize={11} fontWeight={700}
-                    fill={textFill} style={{ fontFamily: 'system-ui, sans-serif' }}>
-                    {noteName(k.pc)}
-                  </text>
-                )}
-              </g>
-            );
-          })}
-          {/* Black keys */}
-          {blackKeys.map(k => {
-            const state = keyState(k.pc);
-            const fill = state.dim ? `${NOTE_COLORS[k.pc]}88` : (state.fill ?? '#e8e4f0');
-            const textFill = state.active ? 'rgba(0,0,0,0.85)' : state.dim ? 'rgba(0,0,0,0.75)' : 'rgba(0,0,0,0.35)';
-            const isChordActive = state.active && !!activeChordPcs;
-            const x = blackX(k.whiteIdx);
-            return (
-              <g key={k.note}>
-                <rect x={x} y={1} width={BLACK_W} height={BLACK_H}
-                  rx={3} fill={fill} stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
-                {isChordActive && <rect x={x} y={1} width={BLACK_W} height={BLACK_H}
-                  rx={3} fill="none" stroke="rgba(0,0,0,0.7)" strokeWidth={2.5} />}
-                {colorPcs?.has(k.pc) && state.active && (
-                  <circle cx={x + BLACK_W / 2} cy={9} r={3} fill="rgba(251,191,36,0.9)" />
-                )}
-                <text x={x + BLACK_W / 2} y={BLACK_H - 7}
-                  textAnchor="middle" fontSize={9} fontWeight={700}
-                  fill={textFill} style={{ fontFamily: 'system-ui, sans-serif' }}>
-                  {labelMode === 'intervals' ? intervalData(k.pc).short : noteName(k.pc)}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
-      </div>
-      {/* Legend */}
-      <div className="flex gap-5 mt-3 flex-wrap">
-        {activeChordPcs ? (
+  function renderDot(pc, cx, cy, r) {
+    const color  = NOTE_COLORS[pc];
+    const nonDia = isNonDia(pc);
+    const isRoot = pc === highlightRoot && !nonDia;
+    const lbl    = dotLabel(pc);
+    return (
+      <g opacity={dotOpacity(pc)}>
+        {nonDia ? (
           <>
-            <Legend dot="#f87171" label="Chord Root" />
-            <Legend dot="rgba(248,113,113,0.6)" label="Chord Tone" />
-            <Legend dot="rgba(248,113,113,0.22)" label="Scale Tone" />
-            <Legend dot="#f5f5f5" label="Outside" border />
+            {/* Full-opacity fill so it reads as a chord tone; dashed border marks it outside key */}
+            <circle cx={cx} cy={cy} r={r} fill={color} />
+            <circle cx={cx} cy={cy} r={r + 1.5} fill="none" stroke={color} strokeWidth={2} strokeDasharray="4 3" />
           </>
         ) : (
+          <circle cx={cx} cy={cy} r={r} fill={color} />
+        )}
+        {isRoot && (
           <>
-            <Legend dot="#f87171" label="Root" />
-            <Legend dot="rgba(74,222,128,0.45)" label="Scale Note" />
-            <Legend dot="#f5f5f5" label="Outside Scale" border />
+            <circle cx={cx} cy={cy} r={r + 1} fill="none" stroke="rgba(0,0,0,0.45)" strokeWidth={3.5} />
+            <circle cx={cx} cy={cy} r={r + 1} fill="none" stroke="white" strokeWidth={2} />
           </>
+        )}
+        {colorPcs?.has(pc) && !nonDia && (
+          <circle cx={cx} cy={cy} r={r + 3.5} fill="none" stroke="rgba(251,191,36,0.8)" strokeWidth={1.5} />
+        )}
+        {lbl && (
+          <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle"
+            fontSize={r * 0.65} fontWeight={700} fill="rgba(0,0,0,0.82)"
+            style={{ fontFamily: 'system-ui, sans-serif', pointerEvents: 'none' }}>
+            {lbl}
+          </text>
+        )}
+      </g>
+    );
+  }
+
+  return (
+    <div>
+      <p className="text-[10px] font-bold tracking-[2px] text-white/25 uppercase mb-3">
+        Piano · {activeChordPcs
+          ? (activeChordRoot !== undefined ? pcToName(activeChordRoot, isFlat) + ' chord' : 'chord')
+          : scaleLabel ?? currentKeyInfo.label}
+      </p>
+      <svg width="100%" viewBox={`0 0 ${VB_W} ${VB_H}`} style={{ display: 'block' }}>
+
+        {/* White keys — monochrome */}
+        {whiteKeys.map(k => {
+          const x  = whiteX(k.whiteIdx);
+          const cx = x + (WHITE_W - 1) / 2;
+          const cy = WHITE_H - W_R - 5;
+          return (
+            <g key={k.note}>
+              <path d={kPath(x, WHITE_W - 1, WHITE_H, 4)} fill="#f2f0f7" />
+              {showDot(k.pc) && renderDot(k.pc, cx, cy, W_R)}
+            </g>
+          );
+        })}
+
+        {/* Black keys — monochrome, rendered on top */}
+        {blackKeys.map(k => {
+          const x  = blackX(k.whiteIdx);
+          const cx = x + BLACK_W / 2;
+          const cy = BLACK_H - B_R - 5;
+          return (
+            <g key={k.note}>
+              <path d={kPath(x, BLACK_W, BLACK_H, 3)} fill="#252033" />
+              {showDot(k.pc) && renderDot(k.pc, cx, cy, B_R)}
+            </g>
+          );
+        })}
+
+      </svg>
+
+      {/* Legend */}
+      <div className="flex gap-5 mt-3 flex-wrap">
+        <LegendDot ring label="Root" />
+        {activeChordPcs ? (
+          <>
+            <LegendDot label="Chord tone" />
+            <LegendDot dim label="Scale only" />
+            <LegendDot dashed label="Outside key" />
+          </>
+        ) : (
+          <LegendDot label="Scale note" />
         )}
       </div>
     </div>
   );
 }
 
-function Legend({ dot, label, border }) {
+function LegendDot({ label, ring, dim, dashed }) {
+  const color = '#a78bfa';
   return (
     <div className="flex items-center gap-1.5 text-[11px] text-white/40">
-      <span className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-        style={{ background: dot, border: border ? '1px solid rgba(255,255,255,0.15)' : undefined }} />
+      <svg width={16} height={16} viewBox="0 0 16 16" style={{ flexShrink: 0 }}>
+        {dashed ? (
+          <>
+            <circle cx={8} cy={8} r={5} fill={color} />
+            <circle cx={8} cy={8} r={6.5} fill="none" stroke={color} strokeWidth={2} strokeDasharray="4 3" />
+          </>
+        ) : (
+          <circle cx={8} cy={8} r={6} fill={color} opacity={dim ? 0.2 : 1} />
+        )}
+        {ring && (
+          <>
+            <circle cx={8} cy={8} r={7} fill="none" stroke="rgba(0,0,0,0.45)" strokeWidth={3} />
+            <circle cx={8} cy={8} r={7} fill="none" stroke="white" strokeWidth={1.5} />
+          </>
+        )}
+      </svg>
       {label}
     </div>
   );
