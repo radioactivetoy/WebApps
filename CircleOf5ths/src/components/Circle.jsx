@@ -41,6 +41,10 @@ export default function Circle({ selectedKey, onKeySelect, rotationAngle, parent
   const circleRefIndex = isModal ? parentIndex : selectedIndex;
   // Lydian/Mixolydian have a major third (interval[2]=4); Dorian/Phrygian/Locrian have a minor third (interval[2]=3)
   const modalRootIsMajor = isModal && SCALES[scaleMode].intervals[2] === 4;
+  // Parallel minor (e.g. Cm for C Dorian) lives at a different slice than selectedIndex (which holds Am for C)
+  const modalRootMinorIndex = (isModal && !modalRootIsMajor)
+    ? circleSlices.findIndex(s => musicKeys[s.minor]?.rootPc === currentKeyInfo.rootPc)
+    : -1;
 
   const diatonicIdxs = [
     circleRefIndex,
@@ -128,7 +132,7 @@ export default function Circle({ selectedKey, onKeySelect, rotationAngle, parent
           const a2 = i * 30 + 15;
           const color = NOTE_COLORS[musicKeys[slice.minor]?.rootPc ?? 0];
           const isActive = i === selectedIndex && !isMajor;
-          const isModalRoot = isModal && i === selectedIndex && !modalRootIsMajor;
+          const isModalRoot = i === modalRootMinorIndex;
           const isDiatonic = diatonicIdxs.includes(i) && !isActive && !isModalRoot;
 
           return (
