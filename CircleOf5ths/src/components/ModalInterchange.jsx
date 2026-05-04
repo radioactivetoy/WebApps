@@ -24,7 +24,7 @@ function borrowedNumeral(chordRootPc, keyRootPc, quality) {
   return num;
 }
 
-export default function ModalInterchange({ activeScalePcs, scaleMode, rootPc, isFlat, onHighlightChord }) {
+export default function ModalInterchange({ activeScalePcs, scaleMode, rootPc, isFlat, onHighlightChord, inline }) {
   if (!PARALLEL[scaleMode]) return null;
 
   const parallelPcs = PARALLEL[scaleMode].map(i => (rootPc + i) % 12);
@@ -47,11 +47,12 @@ export default function ModalInterchange({ activeScalePcs, scaleMode, rootPc, is
 
   if (borrowed.length === 0) return null;
 
-  return (
-    <div className="rounded-2xl px-5 py-4"
-      style={{ background: 'rgba(255,255,255,0.045)', border: '1px solid rgba(255,255,255,0.09)' }}>
-      <p className="text-[10px] font-bold tracking-[2px] text-white/25 uppercase mb-3">
-        Modal Interchange · parallel {scaleMode === 'major' ? 'minor' : 'major'}
+  const parallelLabel = scaleMode === 'major' ? 'minor' : 'major';
+
+  const content = (
+    <>
+      <p className="text-[9px] font-bold tracking-[2px] text-white/20 uppercase mb-2">
+        Modal Interchange · parallel {parallelLabel}
       </p>
       <div className="flex gap-2 flex-wrap">
         {borrowed.map(chord => {
@@ -68,6 +69,17 @@ export default function ModalInterchange({ activeScalePcs, scaleMode, rootPc, is
           );
         })}
       </div>
+    </>
+  );
+
+  if (inline) {
+    return <div className="mt-3 pt-3 border-t border-white/[0.06]">{content}</div>;
+  }
+
+  return (
+    <div className="rounded-2xl px-5 py-4"
+      style={{ background: 'rgba(255,255,255,0.045)', border: '1px solid rgba(255,255,255,0.09)' }}>
+      {content}
     </div>
   );
 }

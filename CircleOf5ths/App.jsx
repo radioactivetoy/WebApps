@@ -10,7 +10,6 @@ import AIAssistant from './src/components/AIAssistant.jsx';
 import ScaleSelector from './src/components/ScaleSelector.jsx';
 import RootPicker from './src/components/RootPicker.jsx';
 import ScaleFormulaStrip from './src/components/ScaleFormulaStrip.jsx';
-import ModalInterchange from './src/components/ModalInterchange.jsx';
 import CommonProgressions from './src/components/CommonProgressions.jsx';
 
 export default function App() {
@@ -157,8 +156,6 @@ export default function App() {
         onScaleModeChange={handleScaleModeChange}
         rootPc={currentKeyInfo.rootPc}
       />
-      <ScaleFormulaStrip scaleMode={scaleMode} />
-
       <main className="max-w-[1350px] mx-auto px-6 py-5 flex gap-5">
         {/* Left column */}
         <div className="flex-shrink-0 flex flex-col gap-4 w-[420px]">
@@ -169,6 +166,7 @@ export default function App() {
             parentKeyName={parentKeyName}
             scaleMode={scaleMode}
           />
+          <ScaleFormulaStrip scaleMode={scaleMode} />
         </div>
 
         {/* Right column */}
@@ -196,6 +194,7 @@ export default function App() {
           <DiatonicChords
             activeScalePcs={activeScalePcs}
             scaleMode={scaleMode}
+            rootPc={currentKeyInfo.rootPc}
             isFlat={isFlat}
             selectedChordDegree={selectedChordDegree}
             onChordSelect={handleChordSelect}
@@ -207,13 +206,6 @@ export default function App() {
             scaleMode={scaleMode}
             diatonicChords={diatonicChords}
             onChordSelect={handleProgressionStep}
-          />
-          <ModalInterchange
-            activeScalePcs={activeScalePcs}
-            scaleMode={scaleMode}
-            rootPc={currentKeyInfo.rootPc}
-            isFlat={isFlat}
-            onHighlightChord={handleHighlightChord}
           />
           <AIAssistant
             currentKeyInfo={currentKeyInfo}
