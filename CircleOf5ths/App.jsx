@@ -201,13 +201,11 @@ export default function App() {
           <DiatonicChords
             activeScalePcs={activeScalePcs}
             scaleMode={scaleMode}
-            rootPc={currentKeyInfo.rootPc}
             isFlat={isFlat}
             selectedChordDegree={selectedChordDegree}
             onChordSelect={handleChordSelect}
             chordVariant={chordVariant}
             onChordVariantChange={setChordVariant}
-            onHighlightChord={handleHighlightChord}
           />
           <ChordFamilyTable
             activeScalePcs={activeScalePcs}

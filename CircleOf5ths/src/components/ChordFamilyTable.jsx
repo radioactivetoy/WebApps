@@ -138,7 +138,7 @@ export default function ChordFamilyTable({
 
         {/* ── Main family ── */}
         <div className="flex items-stretch gap-0">
-          <RowLabel>Family</RowLabel>
+          <RowLabel>Diatonic</RowLabel>
           <div className="flex-1 grid grid-cols-7 gap-1.5">
             {chords.map(chord => {
               const isActive = selectedChordDegree === chord.degree;
