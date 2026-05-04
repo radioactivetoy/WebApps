@@ -187,6 +187,11 @@ export default function App() {
           />
           <AIAssistant
             currentKeyInfo={currentKeyInfo}
+            scaleLabel={scaleLabel}
+            scaleMode={scaleMode}
+            activeScalePcs={activeScalePcs}
+            isFlat={isFlat}
+            parentKeyName={parentKeyName}
             onHighlightChord={info => {
               setCustomChordHighlight(info);
               setSelectedChordDegree(null);

@@ -3,7 +3,7 @@ import { noteToPc, NOTE_COLORS, pcToName } from '../data/musicTheory.js';
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY ?? '';
 
-export default function AIAssistant({ currentKeyInfo, onHighlightChord }) {
+export default function AIAssistant({ currentKeyInfo, scaleLabel, scaleMode, activeScalePcs, isFlat, parentKeyName, onHighlightChord }) {
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState(null);
   const [genre, setGenre] = useState('Pop');
@@ -55,22 +55,27 @@ export default function AIAssistant({ currentKeyInfo, onHighlightChord }) {
     setLoading(false);
   }
 
+  const rootName = currentKeyInfo.label.split(' ')[0];
+  const noteNames = activeScalePcs.map(pc => pcToName(pc, isFlat)).join(', ');
+  const modeContext = parentKeyName
+    ? `${scaleLabel} (derived from ${parentKeyName} Major, available notes: ${noteNames})`
+    : `${scaleLabel} (available notes: ${noteNames})`;
+
   function handleCharacteristics() {
     callGemini(
-      `Describe the emotional feel and 2-3 famous pieces in ${currentKeyInfo.label}. Under 150 words, no markdown.`,
+      `Describe the emotional character and typical use of ${modeContext}. Mention 2-3 famous songs or pieces that use this sound. Under 150 words, no markdown.`,
       false
     );
   }
 
   function handleProgression() {
     callGemini(
-      `Generate a ${genre} chord progression in ${currentKeyInfo.label}.
-Return ONLY valid JSON: {"progression":[{"numeral":"I","name":"Cmaj7","notes":["C","E","G","B"]}],"explanation":"one sentence"}`,
+      `Generate a ${genre} chord progression in ${modeContext}.
+Use only notes from the scale. Return ONLY valid JSON:
+{"progression":[{"numeral":"I","name":"Cmaj7","notes":["C","E","G","B"]}],"explanation":"one sentence about why it works in this mode"}`,
       true
     );
   }
-
-  const isFlat = currentKeyInfo.accType === 'flat';
 
   return (
     <div className="rounded-2xl px-5 py-4"
