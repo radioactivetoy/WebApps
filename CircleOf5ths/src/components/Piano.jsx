@@ -94,8 +94,8 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
           {/* Black keys */}
           {blackKeys.map(k => {
             const state = keyState(k.pc);
-            const fill = state.fill ?? '#000';
-            const textFill = state.active ? 'rgba(0,0,0,0.85)' : state.dim ? NOTE_COLORS[k.pc] : 'rgba(255,255,255,0.7)';
+            const fill = state.dim ? `${NOTE_COLORS[k.pc]}88` : (state.fill ?? '#000');
+            const textFill = state.active ? 'rgba(0,0,0,0.85)' : state.dim ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.7)';
             const isChordActive = state.active && !!activeChordPcs;
             const x = blackX(k.whiteIdx);
             return (
