@@ -1,35 +1,24 @@
-import { NOTE_COLORS, pcToName,
-  majorNumerals, minorNumerals, major7Numerals, minor7Numerals,
+import { NOTE_COLORS, buildDiatonicChords,
   majorHarmonicFn, minorHarmonicFn, HARMONIC_FN_COLORS } from '../data/musicTheory.js';
 
+const MODAL_SCALES = new Set(['dorian','phrygian','lydian','mixolydian','locrian']);
+
 export default function DiatonicChords({
-  currentKeyInfo, selectedChordDegree, onChordSelect, chordType, onChordTypeChange
+  activeScalePcs, scaleMode, isFlat,
+  selectedChordDegree, onChordSelect, chordType, onChordTypeChange
 }) {
-  const { scalePcs, type } = currentKeyInfo;
-  const isFlat = currentKeyInfo.accType === 'flat';
-  const activeNumerals = type === 'major'
-    ? (chordType === 'triad' ? majorNumerals : major7Numerals)
-    : (chordType === 'triad' ? minorNumerals : minor7Numerals);
+  const is7Note = activeScalePcs.length === 7;
+  const showHarmonicFn = scaleMode === 'major' || scaleMode === 'minor';
 
-  const harmonicFns = type === 'major' ? majorHarmonicFn : minorHarmonicFn;
-
-  const chords = scalePcs.map((cRootPc, i) => {
-    const numeral = activeNumerals[i];
-    let suffix = '';
-    if (chordType === 'triad') {
-      if (numeral.includes('°')) suffix = 'dim';
-      else if (numeral === numeral.toLowerCase() && !numeral.includes('I')) suffix = 'm';
-    } else {
-      if (numeral.includes('maj7')) suffix = 'maj7';
-      else if (numeral.includes('ø7')) suffix = 'm7b5';
-      else if (numeral.toLowerCase().includes('m7')) suffix = 'm7';
-      else if (numeral.includes('7')) suffix = '7';
-    }
-    const name = pcToName(cRootPc, isFlat) + suffix;
-    const color = NOTE_COLORS[cRootPc];
-    const fn = harmonicFns[i];
-    return { degree: i, numeral, name, color, rootPc: cRootPc, fn };
-  });
+  const chords = is7Note
+    ? buildDiatonicChords(activeScalePcs, isFlat, chordType).map((c, i) => ({
+        ...c,
+        color: NOTE_COLORS[c.rootPc],
+        fn: scaleMode === 'major' ? majorHarmonicFn[i]
+          : scaleMode === 'minor' ? minorHarmonicFn[i]
+          : null,
+      }))
+    : [];
 
   const selected = selectedChordDegree !== null ? chords[selectedChordDegree] : null;
 
@@ -43,49 +32,60 @@ export default function DiatonicChords({
             <span className="text-xs text-white/50 truncate">— {selected.name}</span>
           )}
         </div>
-        <div className="flex bg-white/[0.06] rounded-lg p-0.5 gap-0.5 flex-shrink-0">
-          {['triad','seventh'].map(t => (
-            <button key={t}
-              onClick={() => onChordTypeChange(t)}
-              className="px-3 py-1 rounded-md text-xs font-semibold transition-colors"
-              style={chordType === t
-                ? { background: 'linear-gradient(135deg,#34d399,#22d3ee)', color: '#0f0c29' }
-                : { color: 'rgba(255,255,255,0.35)' }}>
-              {t === 'triad' ? 'Triads' : '7ths'}
-            </button>
-          ))}
+        {is7Note && (
+          <div className="flex bg-white/[0.06] rounded-lg p-0.5 gap-0.5 flex-shrink-0">
+            {['triad','seventh'].map(t => (
+              <button key={t}
+                onClick={() => onChordTypeChange(t)}
+                className="px-3 py-1 rounded-md text-xs font-semibold transition-colors"
+                style={chordType === t
+                  ? { background: 'linear-gradient(135deg,#34d399,#22d3ee)', color: '#0f0c29' }
+                  : { color: 'rgba(255,255,255,0.35)' }}>
+                {t === 'triad' ? 'Triads' : '7ths'}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {!is7Note ? (
+        <p className="text-center text-xs text-white/25 py-4">
+          Chord grid available for 7-note scales.
+        </p>
+      ) : (
+        <div className="grid grid-cols-7 gap-1.5">
+          {chords.map(chord => {
+            const isActive = selectedChordDegree === chord.degree;
+            return (
+              <button
+                key={chord.degree}
+                onClick={() => onChordSelect(isActive ? null : chord.degree)}
+                className="flex flex-col items-center justify-center py-2 px-1 rounded-xl border text-center transition-all"
+                style={isActive
+                  ? { background: `${chord.color}25`, borderColor: `${chord.color}70`, boxShadow: `0 0 14px ${chord.color}30` }
+                  : { background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.08)' }}>
+                <span className="font-bold text-[13px]"
+                  style={{ color: isActive ? chord.color : chord.color + 'BB' }}>
+                  {chord.numeral}
+                </span>
+                <span className="text-[10px] mt-0.5 font-medium"
+                  style={{ color: isActive ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.3)' }}>
+                  {chord.name}
+                </span>
+                {showHarmonicFn && chord.fn && (
+                  <span className="text-[8px] mt-1 px-1.5 py-0.5 rounded-full font-semibold"
+                    style={{
+                      color: HARMONIC_FN_COLORS[chord.fn],
+                      background: `${HARMONIC_FN_COLORS[chord.fn]}22`,
+                    }}>
+                    {chord.fn}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
-      </div>
-      <div className="grid grid-cols-7 gap-1.5">
-        {chords.map(chord => {
-          const isActive = selectedChordDegree === chord.degree;
-          return (
-            <button
-              key={chord.degree}
-              onClick={() => onChordSelect(isActive ? null : chord.degree)}
-              className="flex flex-col items-center justify-center py-2 px-1 rounded-xl border text-center transition-all"
-              style={isActive
-                ? { background: `${chord.color}25`, borderColor: `${chord.color}70`, boxShadow: `0 0 14px ${chord.color}30` }
-                : { background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.08)' }}>
-              <span className="font-bold text-[13px]"
-                style={{ color: isActive ? chord.color : chord.color + 'BB' }}>
-                {chord.numeral}
-              </span>
-              <span className="text-[10px] mt-0.5 font-medium"
-                style={{ color: isActive ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.3)' }}>
-                {chord.name}
-              </span>
-              <span className="text-[8px] mt-1 px-1.5 py-0.5 rounded-full font-semibold"
-                style={{
-                  color: HARMONIC_FN_COLORS[chord.fn],
-                  background: `${HARMONIC_FN_COLORS[chord.fn]}22`,
-                }}>
-                {chord.fn}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      )}
     </div>
   );
 }
