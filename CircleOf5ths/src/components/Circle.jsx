@@ -39,6 +39,8 @@ export default function Circle({ selectedKey, onKeySelect, rotationAngle, parent
   const isModal = !!parentKeyName;
   const parentIndex = isModal ? circleSlices.findIndex(s => s.major === parentKeyName) : -1;
   const circleRefIndex = isModal ? parentIndex : selectedIndex;
+  // Lydian/Mixolydian have a major third (interval[2]=4); Dorian/Phrygian/Locrian have a minor third (interval[2]=3)
+  const modalRootIsMajor = isModal && SCALES[scaleMode].intervals[2] === 4;
 
   const diatonicIdxs = [
     circleRefIndex,
@@ -74,7 +76,7 @@ export default function Circle({ selectedKey, onKeySelect, rotationAngle, parent
           const a2 = i * 30 + 15;
           const color = NOTE_COLORS[musicKeys[slice.major].rootPc];
           const isActive = isModal ? i === parentIndex : (i === selectedIndex && isMajor);
-          const isModalRoot = isModal && i === selectedIndex;
+          const isModalRoot = isModal && i === selectedIndex && modalRootIsMajor;
           const isDiatonic = diatonicIdxs.includes(i) && !isActive && !isModalRoot;
 
           return (
@@ -126,7 +128,8 @@ export default function Circle({ selectedKey, onKeySelect, rotationAngle, parent
           const a2 = i * 30 + 15;
           const color = NOTE_COLORS[musicKeys[slice.minor]?.rootPc ?? 0];
           const isActive = i === selectedIndex && !isMajor;
-          const isDiatonic = diatonicIdxs.includes(i) && !isActive && !(isModal && i === selectedIndex);
+          const isModalRoot = isModal && i === selectedIndex && !modalRootIsMajor;
+          const isDiatonic = diatonicIdxs.includes(i) && !isActive && !isModalRoot;
 
           return (
             <g key={`min-${i}`} onClick={() => onKeySelect(slice.minor)} style={{ cursor: 'pointer' }}>
@@ -136,6 +139,16 @@ export default function Circle({ selectedKey, onKeySelect, rotationAngle, parent
                 stroke={isActive ? color : isDiatonic ? `${color}50` : 'rgba(255,255,255,0.06)'}
                 strokeWidth={isActive ? 1.5 : 1}
               />
+              {isModalRoot && (
+                <path
+                  d={arcPath(R_I_IN, R_I_OUT, a1, a2)}
+                  fill={`${color}20`}
+                  stroke={color}
+                  strokeWidth={2}
+                  strokeDasharray="5 3"
+                  style={{ pointerEvents: 'none' }}
+                />
+              )}
               {(() => {
                 const [lx, ly] = pt((R_I_IN + R_I_OUT) / 2, i * 30);
                 const displayName = slice.displayMinor || slice.minor;
