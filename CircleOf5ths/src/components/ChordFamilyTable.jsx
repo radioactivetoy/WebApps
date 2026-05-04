@@ -70,6 +70,34 @@ export default function ChordFamilyTable({
 
       <div className="flex flex-col gap-1.5">
 
+        {/* ── ii chords (ii–V approach to each degree) ── */}
+        <div className="flex items-stretch gap-0">
+          <RowLabel>ii/x</RowLabel>
+          <div className="flex-1 grid grid-cols-7 gap-1.5">
+            {chords.map(chord => {
+              const q = triadQuality(chord.pcs);
+              const isMinorTarget = q === 'minor' || q === 'dim';
+              const iiRoot = (chord.rootPc + 2) % 12;
+              const iiPcs = isMinorTarget
+                ? [0, 3, 6, 10].map(n => (iiRoot + n) % 12)
+                : [0, 3, 7, 10].map(n => (iiRoot + n) % 12);
+              const iiName = pcToName(iiRoot, isFlat) + (isMinorTarget ? 'm7b5' : 'm7');
+              const color = NOTE_COLORS[iiRoot];
+              return (
+                <button
+                  key={chord.degree}
+                  onClick={() => onHighlightChord?.({ pcs: iiPcs, rootPc: iiRoot, name: iiName })}
+                  className="flex flex-col items-center justify-center py-1.5 rounded-lg border text-center transition-all hover:opacity-75"
+                  style={{ background: `${color}0E`, borderColor: `${color}28` }}>
+                  <span className="text-[8px] font-semibold leading-tight" style={{ color: `${color}AA` }}>
+                    {iiName}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* ── Secondary dominants ── */}
         <div className="flex items-stretch gap-0">
           <RowLabel>V7/x</RowLabel>
