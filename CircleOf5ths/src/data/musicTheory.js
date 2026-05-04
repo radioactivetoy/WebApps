@@ -235,6 +235,27 @@ export function buildDiatonicChords(scalePcs, isFlat, chordType) {
         else                      { suf13='13';    numeral=roman+'13';               }
         name = root + suf13; pcs = [rootPc, second, third, fourth, fifth, sixth, seventh]; break;
       }
+      case 'sixth': {
+        let suf6;
+        if      (isMaj) { suf6='6';    numeral=roman+'6';                }
+        else if (isMin) { suf6='m6';   numeral=roman.toLowerCase()+'6';  }
+        else if (isDim) { suf6='dim6'; numeral=roman.toLowerCase()+'°6'; }
+        else            { suf6='6';    numeral=roman+'6';                 }
+        name = root + suf6; pcs = [rootPc, third, fifth, sixth]; break;
+      }
+      case 'six-nine': {
+        let sufSN;
+        if      (isMaj) { sufSN='6/9';  numeral=roman+'6/9';               }
+        else if (isMin) { sufSN='m6/9'; numeral=roman.toLowerCase()+'6/9'; }
+        else            { sufSN='6/9';  numeral=roman+'6/9';                }
+        name = root + sufSN; pcs = [rootPc, second, third, fifth, sixth]; break;
+      }
+      case 'seven-sus4': {
+        let suf7s;
+        if (s===11) { suf7s='maj7sus4'; numeral=roman+'maj7sus4'; }
+        else        { suf7s='7sus4';    numeral=roman+'7sus4';     }
+        name = root + suf7s; pcs = [rootPc, fourth, fifth, seventh]; break;
+      }
       default: // triad
         name = root + suffix; pcs = [rootPc, third, fifth]; break;
     }
