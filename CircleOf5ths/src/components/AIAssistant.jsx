@@ -11,12 +11,13 @@ export default function AIAssistant({ currentKeyInfo, onHighlightChord }) {
   const [activeAiIdx, setActiveAiIdx] = useState(null);
 
   async function callGemini(prompt, isProgression) {
+    if (!API_KEY) { setError('No API key — add VITE_GEMINI_API_KEY to .env and restart the dev server.'); return; }
     setLoading(true); setResponse(null); setError(''); setActiveAiIdx(null);
-    const delays = [1000,2000,4000,8000,16000];
-    for (let i = 0; i < 5; i++) {
+    const delays = [1000,2000,4000];
+    for (let i = 0; i < 3; i++) {
       try {
         const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,
           {
             method:'POST', headers:{'Content-Type':'application/json'},
             body: JSON.stringify({
@@ -25,7 +26,16 @@ export default function AIAssistant({ currentKeyInfo, onHighlightChord }) {
             }),
           }
         );
-        if (!res.ok) throw new Error('API Error');
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          const msg = err?.error?.message ?? `HTTP ${res.status}`;
+          // Don't retry auth / bad-request errors
+          if (res.status === 400 || res.status === 401 || res.status === 403) {
+            setError(`API error: ${msg}`);
+            setLoading(false); return;
+          }
+          throw new Error(msg);
+        }
         const data = await res.json();
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
         if (text) {
@@ -37,11 +47,11 @@ export default function AIAssistant({ currentKeyInfo, onHighlightChord }) {
           } else { setResponse(text); }
           setLoading(false); return;
         }
-      } catch {
-        if (i < 4) await new Promise(r => setTimeout(r, delays[i]));
+      } catch(e) {
+        if (i < 2) await new Promise(r => setTimeout(r, delays[i]));
+        else { setError(`AI error: ${e.message}`); setLoading(false); return; }
       }
     }
-    setError('AI assistant unavailable. Please try again later.');
     setLoading(false);
   }
 
