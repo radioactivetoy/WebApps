@@ -126,6 +126,79 @@ export const minorIntervalNames = ['Root','Major 2nd','Minor 3rd','Perfect 4th',
 export const majorSteps = 'W - W - H - W - W - W - H';
 export const minorSteps = 'W - H - W - W - H - W - W';
 
+// ── Scale definitions ─────────────────────────────────────────────────────────
+// parentOffset: semitones to add to rootPc to get the parent major key root (modes only)
+export const SCALES = {
+  'major':      { label: 'Major',    intervals: [0,2,4,5,7,9,11], parentOffset: null },
+  'dorian':     { label: 'Dorian',   intervals: [0,2,3,5,7,9,10], parentOffset: 10   },
+  'phrygian':   { label: 'Phrygian', intervals: [0,1,3,5,7,8,10], parentOffset: 8    },
+  'lydian':     { label: 'Lydian',   intervals: [0,2,4,6,7,9,11], parentOffset: 7    },
+  'mixolydian': { label: 'Mixo',     intervals: [0,2,4,5,7,9,10], parentOffset: 5    },
+  'minor':      { label: 'Minor',    intervals: [0,2,3,5,7,8,10], parentOffset: null },
+  'locrian':    { label: 'Locrian',  intervals: [0,1,3,5,6,8,10], parentOffset: 1    },
+  'maj-pent':   { label: 'Maj Pent', intervals: [0,2,4,7,9],      parentOffset: null },
+  'min-pent':   { label: 'Min Pent', intervals: [0,3,5,7,10],     parentOffset: null },
+  'blues':      { label: 'Blues',    intervals: [0,3,5,6,7,10],   parentOffset: null },
+};
+
+// Maps each pc to the natural letter used for its staff position.
+// Sharp spelling: C# sits on C's line; flat spelling: Db sits on D's line.
+const _STAFF_SHARP = ['C','C','D','D','E','F','F','G','G','A','A','B'];
+const _STAFF_FLAT  = ['C','D','D','E','E','F','G','G','A','A','B','B'];
+
+export function computeDrawScale(rootPc, scalePcs, isFlat) {
+  const letters = isFlat ? _STAFF_FLAT : _STAFF_SHARP;
+  let octave = rootPc >= 9 ? 3 : 4; // A/Bb/B roots start at octave 3
+  return scalePcs.map((pc, i) => {
+    if (i > 0 && pc < scalePcs[i - 1]) octave++; // wrapped past B→C
+    return letters[pc] + octave;
+  });
+}
+
+// Computes diatonic chord names + pcs for any 7-note scale.
+// Returns array of { degree, numeral, name, pcs, rootPc }.
+export function buildDiatonicChords(scalePcs, isFlat, chordType) {
+  const ROMAN = ['I','II','III','IV','V','VI','VII'];
+  return scalePcs.map((rootPc, i) => {
+    const third   = scalePcs[(i + 2) % 7];
+    const fifth   = scalePcs[(i + 4) % 7];
+    const seventh = scalePcs[(i + 6) % 7];
+    const t = (third   - rootPc + 12) % 12;
+    const f = (fifth   - rootPc + 12) % 12;
+    const s = (seventh - rootPc + 12) % 12;
+
+    let quality;
+    if      (t === 4 && f === 7) quality = 'major';
+    else if (t === 3 && f === 7) quality = 'minor';
+    else if (t === 3 && f === 6) quality = 'dim';
+    else                         quality = 'aug';
+
+    const roman = ROMAN[i];
+    let numeral, suffix;
+    if      (quality === 'major') { numeral = roman;                   suffix = '';    }
+    else if (quality === 'minor') { numeral = roman.toLowerCase();     suffix = 'm';   }
+    else if (quality === 'dim')   { numeral = roman.toLowerCase()+'°'; suffix = 'dim'; }
+    else                          { numeral = roman+'+';               suffix = 'aug'; }
+
+    let name, pcs;
+    if (chordType === 'seventh') {
+      let suf7;
+      if      (quality==='major' && s===11) { suf7='maj7'; numeral=roman+'maj7';              }
+      else if (quality==='major' && s===10) { suf7='7';    numeral=roman+'7';                 }
+      else if (quality==='minor' && s===10) { suf7='m7';   numeral=roman.toLowerCase()+'7';   }
+      else if (quality==='dim'   && s===10) { suf7='m7b5'; numeral=roman.toLowerCase()+'ø7';  }
+      else if (quality==='dim'   && s===9)  { suf7='dim7'; numeral=roman.toLowerCase()+'°7';  }
+      else                                  { suf7='m7';   numeral=roman.toLowerCase()+'7';   }
+      name = pcToName(rootPc, isFlat) + suf7;
+      pcs  = [rootPc, third, fifth, seventh];
+    } else {
+      name = pcToName(rootPc, isFlat) + suffix;
+      pcs  = [rootPc, third, fifth];
+    }
+    return { degree: i, numeral, name, pcs, rootPc };
+  });
+}
+
 // ── Piano key array (C3–B5, 3 octaves) ───────────────────────────────────────
 const _notes = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 export const PIANO_KEYS = (() => {
