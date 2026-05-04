@@ -35,6 +35,10 @@ export default function GuitarFretboard({ activeScalePcs, activeChordPcs, active
     return chordPcsSet.has(pc) ? 1 : 0.22;
   }
 
+  function isNonDiatonic(pc) {
+    return chordPcsSet?.has(pc) && !scalePcsSet.has(pc);
+  }
+
   function dotLabel(pc) {
     if (!labelMode || labelMode === 'none') return null;
     if (labelMode === 'intervals') {
@@ -105,16 +109,20 @@ export default function GuitarFretboard({ activeScalePcs, activeChordPcs, active
 
         // Fret 0 — open string
         const oPc = openPc % 12;
-        if (scalePcsSet.has(oPc)) {
+        const oInScale = scalePcsSet.has(oPc);
+        const oNonDia  = isNonDiatonic(oPc);
+        if (oInScale || oNonDia) {
           const color = NOTE_COLORS[oPc];
           const isRoot = oPc === highlightRoot;
           const lbl = dotLabel(oPc);
           positions.push(
             <g key="o" opacity={dotOpacity(oPc)}>
-              <circle cx={OPEN_X} cy={sY(s)} r={DOT_R} fill={color} />
-              {isRoot && <circle cx={OPEN_X} cy={sY(s)} r={DOT_R} fill="none" stroke="white" strokeWidth={2.5} />}
+              {oNonDia
+                ? <circle cx={OPEN_X} cy={sY(s)} r={DOT_R} fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.7)" strokeWidth={1.5} />
+                : <circle cx={OPEN_X} cy={sY(s)} r={DOT_R} fill={color} />}
+              {isRoot && !oNonDia && <circle cx={OPEN_X} cy={sY(s)} r={DOT_R} fill="none" stroke="white" strokeWidth={2.5} />}
               {lbl && <text x={OPEN_X} y={sY(s)} textAnchor="middle" dominantBaseline="middle"
-                fontSize={7} fontWeight={700} fill="rgba(0,0,0,0.8)"
+                fontSize={7} fontWeight={700} fill={oNonDia ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)'}
                 style={{ pointerEvents: 'none', fontFamily: 'system-ui, sans-serif' }}>{lbl}</text>}
             </g>
           );
@@ -123,7 +131,9 @@ export default function GuitarFretboard({ activeScalePcs, activeChordPcs, active
         // Frets 1–15
         for (let f = 1; f <= 15; f++) {
           const pc = (openPc + f) % 12;
-          if (!scalePcsSet.has(pc)) continue;
+          const inScale = scalePcsSet.has(pc);
+          const nonDia  = isNonDiatonic(pc);
+          if (!inScale && !nonDia) continue;
           const color = NOTE_COLORS[pc];
           const isRoot = pc === highlightRoot;
           const cx = fX(f);
@@ -131,10 +141,12 @@ export default function GuitarFretboard({ activeScalePcs, activeChordPcs, active
           const lbl = dotLabel(pc);
           positions.push(
             <g key={f} opacity={dotOpacity(pc)}>
-              <circle cx={cx} cy={cy} r={DOT_R} fill={color} />
-              {isRoot && <circle cx={cx} cy={cy} r={DOT_R} fill="none" stroke="white" strokeWidth={2.5} />}
+              {nonDia
+                ? <circle cx={cx} cy={cy} r={DOT_R} fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.7)" strokeWidth={1.5} />
+                : <circle cx={cx} cy={cy} r={DOT_R} fill={color} />}
+              {isRoot && !nonDia && <circle cx={cx} cy={cy} r={DOT_R} fill="none" stroke="white" strokeWidth={2.5} />}
               {lbl && <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle"
-                fontSize={7} fontWeight={700} fill="rgba(0,0,0,0.8)"
+                fontSize={7} fontWeight={700} fill={nonDia ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)'}
                 style={{ pointerEvents: 'none', fontFamily: 'system-ui, sans-serif' }}>{lbl}</text>}
             </g>
           );

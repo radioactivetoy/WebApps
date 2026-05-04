@@ -18,10 +18,11 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
   function keyState(pc) {
     const c = NOTE_COLORS[pc];
     if (activeChordPcs) {
-      if (pc === activeChordRoot || activeChordPcs.includes(pc))
-        return { fill: c, active: true, dim: false };
-      if (scalePcs.includes(pc))
-        return { fill: `${c}40`, active: false, dim: true };
+      const inChord = pc === activeChordRoot || activeChordPcs.includes(pc);
+      const inScale = scalePcs.includes(pc);
+      if (inChord && !inScale) return { fill: null, active: true, dim: false }; // non-diatonic: white + border only
+      if (inChord)             return { fill: c,    active: true, dim: false };
+      if (inScale)             return { fill: `${c}40`, active: false, dim: true };
       return { fill: null, active: false, dim: false };
     }
     if (pc === rootPc || scalePcs.includes(pc))
