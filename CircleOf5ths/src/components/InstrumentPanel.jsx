@@ -1,7 +1,7 @@
 import { NOTE_COLORS, pcToName } from '../data/musicTheory.js';
 import { useAudio } from '../hooks/useAudio.js';
 import Piano from './Piano.jsx';
-import GuitarDiagram from './GuitarDiagram.jsx';
+import GuitarFretboard from './GuitarFretboard.jsx';
 
 export default function InstrumentPanel({
   currentKeyInfo,
@@ -74,14 +74,13 @@ export default function InstrumentPanel({
           labelMode={labelMode}
         />
       ) : (
-        <div className="min-h-[140px]">
-          {activeName ? (
-            <GuitarDiagram chordName={activeName} isFlat={isFlat} />
-          ) : (
-            <div className="flex items-center justify-center h-36 text-white/25 text-sm">
-              Select a chord to see the guitar diagram
-            </div>
-          )}
+        <div className="mt-1 mb-1">
+          <GuitarFretboard
+            activeScalePcs={activeScalePcs}
+            activeChordPcs={activeChordPcs}
+            activeChordRoot={activeChordRoot}
+            rootPc={rootPc}
+          />
         </div>
       )}
 
