@@ -72,7 +72,7 @@ export default function ChordFamilyTable({
 
         {/* ── ii chords: both m7 and dom7 options stacked ── */}
         <div className="flex items-stretch gap-0">
-          <RowLabel>ii/x</RowLabel>
+          <RowLabel>Approach</RowLabel>
           <div className="flex-1 grid grid-cols-7 gap-1.5">
             {chords.map(chord => {
               const q = triadQuality(chord.pcs);
@@ -114,7 +114,7 @@ export default function ChordFamilyTable({
 
         {/* ── Secondary dominants ── */}
         <div className="flex items-stretch gap-0">
-          <RowLabel>V7/x</RowLabel>
+          <RowLabel>Sec Dom</RowLabel>
           <div className="flex-1 grid grid-cols-7 gap-1.5">
             {chords.map(chord => {
               const secRoot = (chord.rootPc + 7) % 12;
