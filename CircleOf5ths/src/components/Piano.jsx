@@ -57,11 +57,14 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
             const state = keyState(k.pc);
             const fill = state.fill ?? '#f5f5f5';
             const textFill = state.active ? 'rgba(0,0,0,0.8)' : state.dim ? NOTE_COLORS[k.pc] : '#888';
+            const isChordActive = state.active && !!activeChordPcs;
             const x = whiteX(k.whiteIdx);
             return (
               <g key={k.note}>
                 <rect x={x} y={1} width={WHITE_W - 2} height={WHITE_H}
                   rx={4} fill={fill} stroke="rgba(255,255,255,0.08)" strokeWidth={1} />
+                {isChordActive && <rect x={x} y={1} width={WHITE_W - 2} height={WHITE_H}
+                  rx={4} fill="none" stroke="white" strokeWidth={2} />}
                 {labelMode === 'intervals' ? (() => {
                   const iv = intervalData(k.pc);
                   return (
@@ -93,11 +96,14 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
             const state = keyState(k.pc);
             const fill = state.fill ?? '#000';
             const textFill = state.active ? 'rgba(0,0,0,0.85)' : state.dim ? NOTE_COLORS[k.pc] : 'rgba(255,255,255,0.7)';
+            const isChordActive = state.active && !!activeChordPcs;
             const x = blackX(k.whiteIdx);
             return (
               <g key={k.note}>
                 <rect x={x} y={1} width={BLACK_W} height={BLACK_H}
                   rx={3} fill={fill} stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
+                {isChordActive && <rect x={x} y={1} width={BLACK_W} height={BLACK_H}
+                  rx={3} fill="none" stroke="white" strokeWidth={2} />}
                 <text x={x + BLACK_W / 2} y={BLACK_H - 7}
                   textAnchor="middle" fontSize={9} fontWeight={700}
                   fill={textFill} style={{ fontFamily: 'system-ui, sans-serif' }}>
