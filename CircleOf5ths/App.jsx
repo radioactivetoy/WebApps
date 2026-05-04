@@ -14,7 +14,7 @@ export default function App() {
   const [selectedKey, setSelectedKey]                   = useState('C');
   const [selectedChordDegree, setSelectedChordDegree]   = useState(null);
   const [customChordHighlight, setCustomChordHighlight] = useState(null);
-  const [chordType, setChordType]                       = useState('triad');
+  const [chordVariant, setChordVariant]                 = useState('triad');
   const [instrumentMode, setInstrumentMode]             = useState('piano');
   const [labelMode, setLabelMode]                       = useState('notes');
   const [scaleMode, setScaleMode]                       = useState('major');
@@ -70,11 +70,11 @@ export default function App() {
 
   // Only compute diatonic chords for 7-note scales
   const is7Note = activeScalePcs.length === 7;
-  const diatonicChords = is7Note
-    ? buildDiatonicChords(activeScalePcs, isFlat, chordType)
-    : [];
+  const diatonicChords = is7Note ? buildDiatonicChords(activeScalePcs, isFlat, 'triad') : [];
 
-  const activeChord = selectedChordDegree !== null ? diatonicChords[selectedChordDegree] : null;
+  const activeChord = selectedChordDegree !== null
+    ? buildDiatonicChords(activeScalePcs, isFlat, chordVariant)[selectedChordDegree]
+    : null;
   const activePcs   = customChordHighlight?.pcs  || activeChord?.pcs  || null;
   const activeRoot  = customChordHighlight ? customChordHighlight.rootPc : activeChord?.rootPc;
   const activeName  = customChordHighlight ? customChordHighlight.name  : activeChord?.name;
@@ -86,6 +86,7 @@ export default function App() {
   function handleChordSelect(degree) {
     setSelectedChordDegree(degree);
     setCustomChordHighlight(null);
+    setChordVariant('triad');
   }
 
   function handleScaleModeChange(mode) {
@@ -182,8 +183,8 @@ export default function App() {
             isFlat={isFlat}
             selectedChordDegree={selectedChordDegree}
             onChordSelect={handleChordSelect}
-            chordType={chordType}
-            onChordTypeChange={setChordType}
+            chordVariant={chordVariant}
+            onChordVariantChange={setChordVariant}
           />
           <AIAssistant
             currentKeyInfo={currentKeyInfo}
