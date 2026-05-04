@@ -4,6 +4,8 @@ const GROUPS = [
   ['major', 'minor'],
   ['dorian', 'phrygian', 'lydian', 'mixolydian', 'locrian'],
   ['maj-pent', 'min-pent', 'blues'],
+  ['mel-minor', 'lyd-dom', 'altered'],
+  ['harm-minor', 'phryg-dom'],
 ];
 
 export default function ScaleSelector({ scaleMode, onScaleModeChange, rootPc }) {

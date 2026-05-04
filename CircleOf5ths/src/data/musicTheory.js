@@ -139,6 +139,11 @@ export const SCALES = {
   'maj-pent':   { label: 'Maj Pent', intervals: [0,2,4,7,9],      parentOffset: null },
   'min-pent':   { label: 'Min Pent', intervals: [0,3,5,7,10],     parentOffset: null },
   'blues':      { label: 'Blues',    intervals: [0,3,5,6,7,10],   parentOffset: null },
+  'mel-minor':  { label: 'Mel Min',  intervals: [0,2,3,5,7,9,11], parentOffset: null },
+  'lyd-dom':    { label: 'Lyd Dom',  intervals: [0,2,4,6,7,9,10], parentOffset: null },
+  'altered':    { label: 'Altered',  intervals: [0,1,3,4,6,8,10], parentOffset: null },
+  'harm-minor': { label: 'Harm Min', intervals: [0,2,3,5,7,8,11], parentOffset: null },
+  'phryg-dom':  { label: 'Phryg Dom',intervals: [0,1,4,5,7,8,10], parentOffset: null },
 };
 
 // Maps each pc to the natural letter used for its staff position.
