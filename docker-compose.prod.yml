@@ -1,6 +1,6 @@
 services:
   apps:
-    image: yourdockerhubuser/webapps:latest
+    image: webapps:latest
     ports:
       - "80:80"
     restart: unless-stopped
