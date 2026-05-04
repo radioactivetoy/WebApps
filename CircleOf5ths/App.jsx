@@ -96,7 +96,6 @@ export default function App() {
       <KeyInfoBar
         selectedKey={selectedKey}
         currentKeyInfo={currentKeyInfo}
-        scaleMode={scaleMode}
         parentKeyName={parentKeyName}
         onKeySelect={handleKeySelect}
       />

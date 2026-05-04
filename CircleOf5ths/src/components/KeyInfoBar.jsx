@@ -31,7 +31,7 @@ function Pill({ label, keyName, onKeySelect }) {
   return (
     <button
       onClick={() => onKeySelect(keyName)}
-      className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-colors hover:opacity-80"
+      className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-opacity hover:opacity-80"
       style={{ background: `${color}18`, borderColor: `${color}40`, color }}
     >
       <span className="text-white/40 font-normal">{label}:</span>
@@ -64,7 +64,7 @@ export default function KeyInfoBar({ selectedKey, currentKeyInfo, parentKeyName,
     <div className="px-7 py-2.5 flex items-center gap-3 flex-wrap border-b"
       style={{ background: `${color}10`, borderColor: `${color}25` }}>
       <span className="text-xl font-black" style={{ color }}>{displayLabel}</span>
-      {parentEntry && parentColor && (
+      {parentEntry && (
         <button
           onClick={() => onKeySelect(parentKeyName)}
           className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border hover:opacity-80 transition-opacity"
