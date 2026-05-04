@@ -162,8 +162,11 @@ export function computeDrawScale(rootPc, scalePcs, isFlat) {
 export function buildDiatonicChords(scalePcs, isFlat, chordType) {
   const ROMAN = ['I','II','III','IV','V','VI','VII'];
   return scalePcs.map((rootPc, i) => {
+    const second  = scalePcs[(i + 1) % 7];
     const third   = scalePcs[(i + 2) % 7];
+    const fourth  = scalePcs[(i + 3) % 7];
     const fifth   = scalePcs[(i + 4) % 7];
+    const sixth   = scalePcs[(i + 5) % 7];
     const seventh = scalePcs[(i + 6) % 7];
     const t = (third   - rootPc + 12) % 12;
     const f = (fifth   - rootPc + 12) % 12;
@@ -176,26 +179,64 @@ export function buildDiatonicChords(scalePcs, isFlat, chordType) {
     else                         quality = 'aug';
 
     const roman = ROMAN[i];
-    let numeral, suffix;
-    if      (quality === 'major') { numeral = roman;                   suffix = '';    }
-    else if (quality === 'minor') { numeral = roman.toLowerCase();     suffix = 'm';   }
-    else if (quality === 'dim')   { numeral = roman.toLowerCase()+'°'; suffix = 'dim'; }
-    else                          { numeral = roman+'+';               suffix = 'aug'; }
+    const isMaj = quality === 'major';
+    const isMin = quality === 'minor';
+    const isDim = quality === 'dim';
+    let numeral = isMaj ? roman : isMin ? roman.toLowerCase() : isDim ? roman.toLowerCase()+'°' : roman+'+';
+    const suffix = isMaj ? '' : isMin ? 'm' : isDim ? 'dim' : 'aug';
+    const root = pcToName(rootPc, isFlat);
 
     let name, pcs;
-    if (chordType === 'seventh') {
-      let suf7;
-      if      (quality==='major' && s===11) { suf7='maj7'; numeral=roman+'maj7';              }
-      else if (quality==='major' && s===10) { suf7='7';    numeral=roman+'7';                 }
-      else if (quality==='minor' && s===10) { suf7='m7';   numeral=roman.toLowerCase()+'7';   }
-      else if (quality==='dim'   && s===10) { suf7='m7b5'; numeral=roman.toLowerCase()+'ø7';  }
-      else if (quality==='dim'   && s===9)  { suf7='dim7'; numeral=roman.toLowerCase()+'°7';  }
-      else                                  { suf7='m7';   numeral=roman.toLowerCase()+'7';   }
-      name = pcToName(rootPc, isFlat) + suf7;
-      pcs  = [rootPc, third, fifth, seventh];
-    } else {
-      name = pcToName(rootPc, isFlat) + suffix;
-      pcs  = [rootPc, third, fifth];
+    switch (chordType) {
+      case 'seventh': {
+        let suf7;
+        if      (isMaj && s===11) { suf7='maj7'; numeral=roman+'maj7';             }
+        else if (isMaj && s===10) { suf7='7';    numeral=roman+'7';                }
+        else if (isMin && s===10) { suf7='m7';   numeral=roman.toLowerCase()+'7';  }
+        else if (isDim && s===10) { suf7='m7b5'; numeral=roman.toLowerCase()+'ø7'; }
+        else if (isDim && s===9)  { suf7='dim7'; numeral=roman.toLowerCase()+'°7'; }
+        else                      { suf7='m7';   numeral=roman.toLowerCase()+'7';  }
+        name = root + suf7; pcs = [rootPc, third, fifth, seventh]; break;
+      }
+      case 'sus2':
+        numeral = roman + 'sus2';
+        name = root + 'sus2'; pcs = [rootPc, second, fifth]; break;
+      case 'sus4':
+        numeral = roman + 'sus4';
+        name = root + 'sus4'; pcs = [rootPc, fourth, fifth]; break;
+      case 'add9':
+        numeral = (isMaj ? roman : roman.toLowerCase()) + 'add9';
+        name = root + suffix + 'add9'; pcs = [rootPc, second, third, fifth]; break;
+      case 'add11':
+        numeral = (isMaj ? roman : roman.toLowerCase()) + 'add11';
+        name = root + suffix + 'add11'; pcs = [rootPc, third, fourth, fifth]; break;
+      case 'ninth': {
+        let suf9;
+        if      (isMaj && s===11) { suf9='maj9'; numeral=roman+'maj9';             }
+        else if (isMaj && s===10) { suf9='9';    numeral=roman+'9';                }
+        else if (isMin)           { suf9='m9';   numeral=roman.toLowerCase()+'9';  }
+        else if (isDim)           { suf9='dim9'; numeral=roman.toLowerCase()+'°9'; }
+        else                      { suf9='9';    numeral=roman+'9';                }
+        name = root + suf9; pcs = [rootPc, second, third, fifth, seventh]; break;
+      }
+      case 'eleventh': {
+        let suf11;
+        if      (isMaj && s===11) { suf11='maj11'; numeral=roman+'maj11';            }
+        else if (isMaj && s===10) { suf11='11';    numeral=roman+'11';               }
+        else if (isMin)           { suf11='m11';   numeral=roman.toLowerCase()+'11'; }
+        else                      { suf11='11';    numeral=roman+'11';               }
+        name = root + suf11; pcs = [rootPc, second, third, fourth, fifth, seventh]; break;
+      }
+      case 'thirteenth': {
+        let suf13;
+        if      (isMaj && s===11) { suf13='maj13'; numeral=roman+'maj13';            }
+        else if (isMaj && s===10) { suf13='13';    numeral=roman+'13';               }
+        else if (isMin)           { suf13='m13';   numeral=roman.toLowerCase()+'13'; }
+        else                      { suf13='13';    numeral=roman+'13';               }
+        name = root + suf13; pcs = [rootPc, second, third, fourth, fifth, sixth, seventh]; break;
+      }
+      default: // triad
+        name = root + suffix; pcs = [rootPc, third, fifth]; break;
     }
     return { degree: i, numeral, name, pcs, rootPc };
   });

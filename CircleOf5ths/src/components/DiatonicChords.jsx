@@ -33,18 +33,25 @@ export default function DiatonicChords({
           )}
         </div>
         {is7Note && (
-          <div className="flex bg-white/[0.06] rounded-lg p-0.5 gap-0.5 flex-shrink-0">
-            {['triad','seventh'].map(t => (
-              <button key={t}
-                onClick={() => onChordTypeChange(t)}
-                className="px-3 py-1 rounded-md text-xs font-semibold transition-colors"
-                style={chordType === t
-                  ? { background: 'linear-gradient(135deg,#34d399,#22d3ee)', color: '#0f0c29' }
-                  : { color: 'rgba(255,255,255,0.35)' }}>
-                {t === 'triad' ? 'Triads' : '7ths'}
-              </button>
+          <select
+            value={chordType}
+            onChange={e => onChordTypeChange(e.target.value)}
+            className="text-xs font-semibold rounded-lg px-2 py-1.5 outline-none cursor-pointer flex-shrink-0"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)' }}>
+            {[
+              ['triad',      'Triads'],
+              ['seventh',    '7ths'],
+              ['ninth',      '9ths'],
+              ['eleventh',   '11ths'],
+              ['thirteenth', '13ths'],
+              ['sus2',       'Sus 2'],
+              ['sus4',       'Sus 4'],
+              ['add9',       'Add 9'],
+              ['add11',      'Add 11'],
+            ].map(([val, label]) => (
+              <option key={val} value={val} style={{ background: '#1e1b4b' }}>{label}</option>
             ))}
-          </div>
+          </select>
         )}
       </div>
 
