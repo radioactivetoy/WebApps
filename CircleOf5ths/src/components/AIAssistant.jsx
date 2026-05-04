@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { noteToPc, NOTE_COLORS, pcToName } from '../data/musicTheory.js';
 
-const API_KEY = ""; // fill in your Gemini API key
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY ?? '';
 
 export default function AIAssistant({ currentKeyInfo, onHighlightChord }) {
   const [loading, setLoading] = useState(false);
