@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { NOTE_COLORS, pcToName } from '../data/musicTheory.js';
 import { useAudio } from '../hooks/useAudio.js';
 import Piano from './Piano.jsx';
@@ -10,9 +11,14 @@ export default function InstrumentPanel({
   isFlat, labelMode, onLabelModeChange,
   instrumentMode, onInstrumentModeChange,
   selectedChordDegree, scaleLabel,
+  colorNotePcs,
 }) {
   const { rootPc } = currentKeyInfo;
   const { playScale, playChord, isPlaying } = useAudio();
+  const [showColorNotes, setShowColorNotes] = useState(false);
+
+  const hasColorNotes = colorNotePcs?.size > 0;
+  const colorPcs = showColorNotes && hasColorNotes && !activeChordPcs ? colorNotePcs : null;
 
   const chips = activeChordPcs
     ? activeChordPcs.map(pc => ({ pc, label: pcToName(pc, isFlat) }))
@@ -47,6 +53,16 @@ export default function InstrumentPanel({
               </button>
             ))}
           </div>
+          {hasColorNotes && (
+            <button
+              onClick={() => setShowColorNotes(v => !v)}
+              className="px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all"
+              style={showColorNotes
+                ? { background: 'rgba(251,191,36,0.2)', border: '1px solid rgba(251,191,36,0.5)', color: 'rgba(251,191,36,0.9)' }
+                : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)' }}>
+              ◆ Color tones
+            </button>
+          )}
         </div>
         {/* Piano / Guitar toggle */}
         <div className="flex bg-white/[0.06] rounded-lg p-0.5 gap-0.5">
@@ -73,6 +89,7 @@ export default function InstrumentPanel({
           isFlat={isFlat}
           labelMode={labelMode}
           scaleLabel={scaleLabel}
+          colorPcs={colorPcs}
         />
       ) : (
         <div className="mt-1 mb-1">
@@ -83,6 +100,7 @@ export default function InstrumentPanel({
             rootPc={rootPc}
             labelMode={labelMode}
             isFlat={isFlat}
+            colorPcs={colorPcs}
           />
         </div>
       )}

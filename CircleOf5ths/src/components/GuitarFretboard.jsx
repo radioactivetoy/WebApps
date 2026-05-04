@@ -24,7 +24,7 @@ function sY(s) { return MT + s * SS; }
 function fX(f) { return NUT_X + (f - 0.5) * FRET_W; } // center of fret f (1-indexed)
 function fLineX(f) { return NUT_X + f * FRET_W; }      // fret bar position (0=nut edge, 1..15)
 
-export default function GuitarFretboard({ activeScalePcs, activeChordPcs, activeChordRoot, rootPc, labelMode, isFlat }) {
+export default function GuitarFretboard({ activeScalePcs, activeChordPcs, activeChordRoot, rootPc, labelMode, isFlat, colorPcs }) {
   const scalePcsSet = new Set(activeScalePcs);
   const chordPcsSet = activeChordPcs ? new Set(activeChordPcs) : null;
   const highlightRoot = activeChordRoot ?? rootPc;
@@ -121,6 +121,7 @@ export default function GuitarFretboard({ activeScalePcs, activeChordPcs, active
                 ? <circle cx={OPEN_X} cy={sY(s)} r={DOT_R} fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.7)" strokeWidth={1.5} />
                 : <circle cx={OPEN_X} cy={sY(s)} r={DOT_R} fill={color} />}
               {isRoot && !oNonDia && <circle cx={OPEN_X} cy={sY(s)} r={DOT_R} fill="none" stroke="white" strokeWidth={2.5} />}
+              {colorPcs?.has(oPc) && !oNonDia && <circle cx={OPEN_X} cy={sY(s)} r={DOT_R + 4} fill="none" stroke="rgba(251,191,36,0.8)" strokeWidth={1.5} />}
               {lbl && <text x={OPEN_X} y={sY(s)} textAnchor="middle" dominantBaseline="middle"
                 fontSize={7} fontWeight={700} fill={oNonDia ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)'}
                 style={{ pointerEvents: 'none', fontFamily: 'system-ui, sans-serif' }}>{lbl}</text>}
@@ -145,6 +146,7 @@ export default function GuitarFretboard({ activeScalePcs, activeChordPcs, active
                 ? <circle cx={cx} cy={cy} r={DOT_R} fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.7)" strokeWidth={1.5} />
                 : <circle cx={cx} cy={cy} r={DOT_R} fill={color} />}
               {isRoot && !nonDia && <circle cx={cx} cy={cy} r={DOT_R} fill="none" stroke="white" strokeWidth={2.5} />}
+              {colorPcs?.has(pc) && !nonDia && <circle cx={cx} cy={cy} r={DOT_R + 4} fill="none" stroke="rgba(251,191,36,0.8)" strokeWidth={1.5} />}
               {lbl && <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle"
                 fontSize={7} fontWeight={700} fill={nonDia ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)'}
                 style={{ pointerEvents: 'none', fontFamily: 'system-ui, sans-serif' }}>{lbl}</text>}

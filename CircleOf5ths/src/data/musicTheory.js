@@ -66,6 +66,18 @@ export const noteYBase = {
 };
 
 // ── Utility functions ─────────────────────────────────────────────────────────
+const _COLOR_SEMITONES = {
+  'b2':1, 'b9':1, 'b3':3, '#9':3, 'M3':4, '#4':6, 'b5':6, '#11':6,
+  'b6':8, '#5':8, 'b13':8, '♮6':9, 'M6':9, 'b7':10, '♮7':11, 'M7':11,
+};
+
+export function getColorNotePcs(scaleMode, rootPc) {
+  const { colorNotes = [] } = SCALES[scaleMode] || {};
+  return new Set(
+    colorNotes.map(n => _COLOR_SEMITONES[n]).filter(s => s !== undefined).map(s => (rootPc + s) % 12)
+  );
+}
+
 export const pcToName = (pc, isFlat) => {
   const sharp = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
   const flat  = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];

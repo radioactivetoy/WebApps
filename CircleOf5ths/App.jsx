@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { musicKeys, circleSlices, SCALES, computeDrawScale, buildDiatonicChords, pcToName } from './src/data/musicTheory.js';
+import { musicKeys, circleSlices, SCALES, computeDrawScale, buildDiatonicChords, pcToName, getColorNotePcs } from './src/data/musicTheory.js';
 import Header from './src/components/Header.jsx';
 import KeyInfoBar from './src/components/KeyInfoBar.jsx';
 import Circle from './src/components/Circle.jsx';
@@ -55,6 +55,11 @@ export default function App() {
   );
 
   const scaleLabel = `${currentKeyInfo.label.split(' ')[0]} ${SCALES[scaleMode].label}`;
+
+  const colorNotePcs = useMemo(
+    () => getColorNotePcs(scaleMode, currentKeyInfo.rootPc),
+    [scaleMode, currentKeyInfo.rootPc]
+  );
 
   useEffect(() => {
     setSelectedChordDegree(null);
@@ -190,6 +195,7 @@ export default function App() {
             onInstrumentModeChange={setInstrumentMode}
             selectedChordDegree={selectedChordDegree}
             scaleLabel={scaleLabel}
+            colorNotePcs={colorNotePcs}
           />
           <DiatonicChords
             activeScalePcs={activeScalePcs}

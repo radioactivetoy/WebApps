@@ -8,7 +8,7 @@ const BLACK_H = 78;
 function whiteX(whiteIdx) { return whiteIdx * WHITE_W + 1; }
 function blackX(whiteIdx) { return whiteIdx * WHITE_W + WHITE_W - BLACK_W / 2 + 1; }
 
-export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, activeChordRoot, isFlat, labelMode, scaleLabel }) {
+export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, activeChordRoot, isFlat, labelMode, scaleLabel, colorPcs }) {
   const { rootPc } = currentKeyInfo;
   const scalePcs = activeScalePcs;
   const whiteKeys = PIANO_KEYS.filter(k => !k.isBlack);
@@ -66,6 +66,9 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
                   rx={4} fill={fill} stroke="rgba(255,255,255,0.08)" strokeWidth={1} />
                 {isChordActive && <rect x={x} y={1} width={WHITE_W - 2} height={WHITE_H}
                   rx={4} fill="none" stroke="rgba(0,0,0,0.7)" strokeWidth={2.5} />}
+                {colorPcs?.has(k.pc) && state.active && (
+                  <circle cx={x + (WHITE_W - 2) / 2} cy={10} r={3.5} fill="rgba(251,191,36,0.9)" />
+                )}
                 {labelMode === 'intervals' ? (() => {
                   const iv = intervalData(k.pc);
                   return (
@@ -105,6 +108,9 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
                   rx={3} fill={fill} stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
                 {isChordActive && <rect x={x} y={1} width={BLACK_W} height={BLACK_H}
                   rx={3} fill="none" stroke="rgba(0,0,0,0.7)" strokeWidth={2.5} />}
+                {colorPcs?.has(k.pc) && state.active && (
+                  <circle cx={x + BLACK_W / 2} cy={9} r={3} fill="rgba(251,191,36,0.9)" />
+                )}
                 <text x={x + BLACK_W / 2} y={BLACK_H - 7}
                   textAnchor="middle" fontSize={9} fontWeight={700}
                   fill={textFill} style={{ fontFamily: 'system-ui, sans-serif' }}>
