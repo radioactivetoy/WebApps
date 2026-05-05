@@ -149,6 +149,7 @@ export default function App() {
         selectedKey={selectedKey}
         currentKeyInfo={currentKeyInfo}
         parentKeyName={parentKeyName}
+        scaleMode={scaleMode}
         onKeySelect={handleKeySelect}
       />
       <RootPicker

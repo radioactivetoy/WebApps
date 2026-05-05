@@ -1,4 +1,4 @@
-import { NOTE_COLORS, musicKeys, circleSlices } from '../data/musicTheory.js';
+import { NOTE_COLORS, musicKeys, circleSlices, SCALES } from '../data/musicTheory.js';
 
 function getRelatedKeys(selectedKey, currentKeyInfo) {
   const { rootPc, type } = currentKeyInfo;
@@ -40,21 +40,29 @@ function Pill({ label, keyName, onKeySelect }) {
   );
 }
 
-export default function KeyInfoBar({ selectedKey, currentKeyInfo, parentKeyName, onKeySelect }) {
+export default function KeyInfoBar({ selectedKey, currentKeyInfo, parentKeyName, scaleMode, onKeySelect }) {
   const { rootPc, accidentals, accType, label } = currentKeyInfo;
   const color = NOTE_COLORS[rootPc];
   const { relativeKey, parallelKey, dominantKey, subdominantKey } = getRelatedKeys(selectedKey, currentKeyInfo);
 
+  // Root note name (first word of label, e.g. "C", "F#", "Bb")
+  const rootName  = label.split(' ')[0];
+  const modeName  = SCALES[scaleMode]?.label ?? label.split(' ')[1];
+  const fullLabel = `${rootName} ${modeName}`;
+
+  // Enharmonic display (F# / Gb, etc.)
   const enharmonicMap = { 'F#':'Gb', 'Db':'C#', 'Ab':'G#', 'Eb':'D#', 'Bb':'A#' };
-  const baseKey = selectedKey.replace('m','');
+  const baseKey    = selectedKey.replace('m','');
   const enharmonic = enharmonicMap[baseKey];
   const displayLabel = enharmonic
-    ? label.replace(baseKey, `${baseKey} / ${enharmonic}`)
-    : label;
+    ? fullLabel.replace(rootName, `${rootName} / ${enharmonic}`)
+    : fullLabel;
 
-  const accText = accidentals === 0
+  // Accidentals from parent key when in a modal/minor context
+  const accRef  = parentKeyName ? musicKeys[parentKeyName] : currentKeyInfo;
+  const accText = accRef.accidentals === 0
     ? '0 accidentals · Natural'
-    : `${accidentals} ${accidentals === 1 ? accType : accType+'s'}`;
+    : `${accRef.accidentals} ${accRef.accidentals === 1 ? accRef.accType : accRef.accType + 's'}`;
 
   // parentKeyName is a musicKeys key like 'Bb' or null
   const parentEntry = parentKeyName ? musicKeys[parentKeyName] : null;
