@@ -58,6 +58,9 @@ export default function KeyInfoBar({ selectedKey, currentKeyInfo, parentKeyName,
     ? fullLabel.replace(rootName, `${rootName} / ${enharmonic}`)
     : fullLabel;
 
+  // Relative/Dominant/Subdom only make harmonic sense for major and minor
+  const isTonal = scaleMode === 'major' || scaleMode === 'minor';
+
   // Accidentals from parent key when in a modal/minor context
   const accRef  = parentKeyName ? musicKeys[parentKeyName] : currentKeyInfo;
   const accText = accRef.accidentals === 0
@@ -81,10 +84,10 @@ export default function KeyInfoBar({ selectedKey, currentKeyInfo, parentKeyName,
           {parentEntry.label} →
         </button>
       )}
-      <Pill label="Relative"    keyName={relativeKey}    onKeySelect={onKeySelect} />
+      {isTonal && <Pill label="Relative"   keyName={relativeKey}    onKeySelect={onKeySelect} />}
       <Pill label="Parallel"    keyName={parallelKey}    onKeySelect={onKeySelect} />
-      <Pill label="→ Dominant"  keyName={dominantKey}    onKeySelect={onKeySelect} />
-      <Pill label="→ Subdom"    keyName={subdominantKey} onKeySelect={onKeySelect} />
+      {isTonal && <Pill label="→ Dominant"  keyName={dominantKey}    onKeySelect={onKeySelect} />}
+      {isTonal && <Pill label="→ Subdom"    keyName={subdominantKey} onKeySelect={onKeySelect} />}
       <span className="ml-auto text-xs text-white/25">{accText}</span>
     </div>
   );
