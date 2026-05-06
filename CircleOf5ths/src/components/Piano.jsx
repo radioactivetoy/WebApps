@@ -14,7 +14,7 @@ function kPath(x, w, h, r) {
   return `M${x} 0L${x+w} 0L${x+w} ${h-r}Q${x+w} ${h} ${x+w-r} ${h}L${x+r} ${h}Q${x} ${h} ${x} ${h-r}Z`;
 }
 
-export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, activeChordRoot, isFlat, labelMode, scaleLabel, colorPcs }) {
+export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, activeChordRoot, isFlat, labelMode, scaleLabel, colorPcs, activePc }) {
   const { rootPc } = currentKeyInfo;
   const scalePcsSet  = new Set(activeScalePcs);
   const chordPcsSet  = activeChordPcs ? new Set(activeChordPcs) : null;
@@ -73,6 +73,12 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
         )}
         {colorPcs?.has(pc) && !nonDia && (
           <circle cx={cx} cy={cy} r={r + 3.5} fill="none" stroke="rgba(251,191,36,0.8)" strokeWidth={1.5} />
+        )}
+        {activePc === pc && (
+          <>
+            <circle cx={cx} cy={cy} r={r + 6} fill="rgba(255,255,255,0.18)" />
+            <circle cx={cx} cy={cy} r={r + 6} fill="none" stroke="white" strokeWidth={1.5} strokeOpacity={0.7} />
+          </>
         )}
         {lbl && (
           <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle"

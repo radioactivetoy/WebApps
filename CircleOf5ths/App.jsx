@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { musicKeys, circleSlices, SCALES, computeDrawScale, buildDiatonicChords, pcToName, getColorNotePcs } from './src/data/musicTheory.js';
+import { useAudio } from './src/hooks/useAudio.js';
 import Header from './src/components/Header.jsx';
 import KeyInfoBar from './src/components/KeyInfoBar.jsx';
 import Circle from './src/components/Circle.jsx';
@@ -14,6 +15,7 @@ import CommonProgressions from './src/components/CommonProgressions.jsx';
 import ChordFamilyTable from './src/components/ChordFamilyTable.jsx';
 
 export default function App() {
+  const audio = useAudio();
   const [selectedKey, setSelectedKey]                   = useState('C');
   const [selectedChordDegree, setSelectedChordDegree]   = useState(null);
   const [customChordHighlight, setCustomChordHighlight] = useState(null);
@@ -77,8 +79,10 @@ export default function App() {
   }, [selectedKey, selectedIndex]);
 
   // Only compute diatonic chords for 7-note scales
-  const is7Note = activeScalePcs.length === 7;
-  const diatonicChords = is7Note ? buildDiatonicChords(activeScalePcs, isFlat, 'triad') : [];
+  const diatonicChords = useMemo(
+    () => activeScalePcs.length === 7 ? buildDiatonicChords(activeScalePcs, isFlat, 'triad') : [],
+    [activeScalePcs, isFlat]
+  );
 
   const activeChord = selectedChordDegree !== null
     ? buildDiatonicChords(activeScalePcs, isFlat, chordVariant)[selectedChordDegree]
@@ -179,6 +183,7 @@ export default function App() {
           selectedChordDegree={selectedChordDegree}
           scaleLabel={scaleLabel}
           colorNotePcs={colorNotePcs}
+          audio={audio}
         />
 
         {/* Two-column area */}
@@ -225,6 +230,7 @@ export default function App() {
               scaleMode={scaleMode}
               diatonicChords={diatonicChords}
               onChordSelect={handleProgressionStep}
+              playChord={audio.playChord}
             />
             <AIAssistant
               currentKeyInfo={currentKeyInfo}

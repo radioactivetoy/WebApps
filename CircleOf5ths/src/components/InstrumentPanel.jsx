@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { NOTE_COLORS, pcToName } from '../data/musicTheory.js';
-import { useAudio } from '../hooks/useAudio.js';
 import Piano from './Piano.jsx';
 import GuitarFretboard from './GuitarFretboard.jsx';
 
@@ -12,10 +11,11 @@ export default function InstrumentPanel({
   instrumentMode, onInstrumentModeChange,
   selectedChordDegree, scaleLabel,
   colorNotePcs,
+  audio,
 }) {
   const { rootPc } = currentKeyInfo;
-  const { playScale, playChord, isPlaying } = useAudio();
-  const [showColorNotes, setShowColorNotes] = useState(false);
+  const { playScale, playChord, stop, isPlaying, isLoading, activePc } = audio;
+  const [showColorNotes, setShowColorNotes] = useState(true);
 
   const hasColorNotes = colorNotePcs?.size > 0;
   const colorPcs = showColorNotes && hasColorNotes && !activeChordPcs ? colorNotePcs : null;
@@ -25,7 +25,7 @@ export default function InstrumentPanel({
     : activeScalePcs.map(pc => ({ pc, label: pcToName(pc, isFlat) }));
 
   function handlePlay() {
-    if (isPlaying) return;
+    if (isPlaying) { stop(); return; }
     if (activeChordPcs) {
       playChord(activeChordPcs, 4, 'arpeggio');
     } else {
@@ -90,6 +90,7 @@ export default function InstrumentPanel({
           labelMode={labelMode}
           scaleLabel={scaleLabel}
           colorPcs={colorPcs}
+          activePc={activePc}
         />
       ) : (
         <div className="mt-1 mb-1">
@@ -113,13 +114,13 @@ export default function InstrumentPanel({
         style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
         <button
           onClick={handlePlay}
-          disabled={isPlaying}
+          disabled={isLoading}
           className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-[11px] font-bold transition-opacity disabled:opacity-40"
           style={{ background: 'linear-gradient(135deg,#a78bfa,#60a5fa)', color: 'white' }}>
           {isPlaying ? '◼' : '▶'}
         </button>
         <span className="text-[10px] text-white/28 uppercase tracking-wide flex-shrink-0">
-          {activeChordPcs ? 'Chord' : 'Scale'}
+          {isLoading ? 'Loading samples…' : activeChordPcs ? 'Chord' : 'Scale'}
         </span>
         <div className="flex gap-1.5 flex-wrap">
           {chips.map(({ pc, label: chipLabel }, i) => {

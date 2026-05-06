@@ -34,21 +34,29 @@ const PROGRESSIONS = {
 
 const STEP_MS = 1400;
 
-export default function CommonProgressions({ scaleMode, diatonicChords, onChordSelect }) {
+export default function CommonProgressions({ scaleMode, diatonicChords, onChordSelect, playChord }) {
   const progressions = PROGRESSIONS[scaleMode];
   const [playing, setPlaying] = useState(null); // { idx, step }
-  const onChordSelectRef = useRef(onChordSelect);
-  onChordSelectRef.current = onChordSelect;
+  const onChordSelectRef    = useRef(onChordSelect);
+  onChordSelectRef.current  = onChordSelect;
+  const diatonicChordsRef   = useRef(diatonicChords);
+  diatonicChordsRef.current = diatonicChords;
 
   useEffect(() => {
     setPlaying(null);
   }, [scaleMode]);
 
+  const playChordRef = useRef(playChord);
+  playChordRef.current = playChord;
+
   useEffect(() => {
     if (!playing) return;
     const prog = progressions?.[playing.idx];
     if (!prog) return;
-    onChordSelectRef.current(prog.degrees[playing.step]);
+    const degree = prog.degrees[playing.step];
+    const chord  = diatonicChordsRef.current[degree];
+    onChordSelectRef.current(degree);
+    if (chord?.pcs) playChordRef.current?.(chord.pcs, 4, 'strum');
     const timer = setTimeout(() => {
       setPlaying(p => p ? { ...p, step: (p.step + 1) % prog.degrees.length } : null);
     }, STEP_MS);

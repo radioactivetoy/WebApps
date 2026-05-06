@@ -1,167 +1,163 @@
 import { useRef, useState } from 'react';
+import * as Tone from 'tone';
 
-function pcToHz(pc, octave = 4) {
-  return 261.63 * Math.pow(2, ((octave - 4) * 12 + pc) / 12);
+const PC_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+
+function pcToNote(pc, octave) {
+  return `${PC_NAMES[pc]}${octave}`;
 }
 
-// Piano-like harmonic series (index = harmonic number)
-function buildPianoWave(ctx) {
-  const n    = 12;
-  const real = new Float32Array(n);
-  const imag = new Float32Array(n);
-  real[1] = 1;      // fundamental
-  real[2] = 0.50;   // octave
-  real[3] = 0.35;   // perfect 5th
-  real[4] = 0.18;   // 2nd octave
-  real[5] = 0.10;
-  real[6] = 0.06;
-  real[7] = 0.03;
-  real[8] = 0.016;
-  real[9] = 0.008;
-  return ctx.createPeriodicWave(real, imag);
-}
-
-// Synthetic reverb — decaying random noise impulse response
-function buildReverb(ctx) {
-  const conv = ctx.createConvolver();
-  const sr   = ctx.sampleRate;
-  const len  = Math.floor(sr * 1.5);
-  const buf  = ctx.createBuffer(2, len, sr);
-  for (let ch = 0; ch < 2; ch++) {
-    const d = buf.getChannelData(ch);
-    for (let i = 0; i < len; i++) {
-      d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2);
-    }
-  }
-  conv.buffer = buf;
-  return conv;
-}
-
-// Keep pc within one octave above rootPc so chords don't span multiple octaves
 function noteOctave(pc, rootPc, rootOctave) {
   return pc >= rootPc ? rootOctave : rootOctave + 1;
 }
 
+const SALAMANDER_URLS = {
+  A0:'A0.mp3',  C1:'C1.mp3',  'D#1':'Ds1.mp3', 'F#1':'Fs1.mp3',
+  A1:'A1.mp3',  C2:'C2.mp3',  'D#2':'Ds2.mp3', 'F#2':'Fs2.mp3',
+  A2:'A2.mp3',  C3:'C3.mp3',  'D#3':'Ds3.mp3', 'F#3':'Fs3.mp3',
+  A3:'A3.mp3',  C4:'C4.mp3',  'D#4':'Ds4.mp3', 'F#4':'Fs4.mp3',
+  A4:'A4.mp3',  C5:'C5.mp3',  'D#5':'Ds5.mp3', 'F#5':'Fs5.mp3',
+  A5:'A5.mp3',  C6:'C6.mp3',  'D#6':'Ds6.mp3', 'F#6':'Fs6.mp3',
+  A6:'A6.mp3',  C7:'C7.mp3',  'D#7':'Ds7.mp3', 'F#7':'Fs7.mp3',
+  A7:'A7.mp3',  C8:'C8.mp3',
+};
+
 export function useAudio() {
-  const ctxRef   = useRef(null);
-  const nodesRef = useRef(null);   // { wave, dry, reverb }
+  const samplerRef  = useRef(null);
+  const droneRef    = useRef(null);   // Tone.Synth — truly sustained sine drone
+  const loadPromise = useRef(null);
+  const stopRef     = useRef(null);   // call to cancel current playback
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [activePc,  setActivePc]  = useState(null);  // pc of the key currently sounding
 
-  function getCtx() {
-    if (!ctxRef.current) {
-      const ctx = new AudioContext();
+  async function getSampler() {
+    await Tone.start();
+    if (samplerRef.current) return samplerRef.current;
 
-      // Signal chain: source → gain → dry ──────────────── destination
-      //                              └──→ reverb → wet ──→ destination
-      const dry    = ctx.createGain();
-      const wet    = ctx.createGain();
-      const reverb = buildReverb(ctx);
+    if (!loadPromise.current) {
+      setIsLoading(true);
+      loadPromise.current = new Promise(resolve => {
+        const reverb = new Tone.Reverb({ decay: 2.5, wet: 0.28 }).toDestination();
 
-      dry.gain.value = 0.72;
-      wet.gain.value = 0.28;
+        // Sine drone — holds indefinitely until triggerRelease
+        droneRef.current = new Tone.Synth({
+          oscillator: { type: 'sine' },
+          envelope: { attack: 0.35, decay: 0, sustain: 1, release: 1.8 },
+          volume: -16,
+        }).connect(reverb);
 
-      dry.connect(ctx.destination);
-      reverb.connect(wet);
-      wet.connect(ctx.destination);
-
-      ctxRef.current   = ctx;
-      nodesRef.current = { wave: buildPianoWave(ctx), dry, reverb };
+        const sampler = new Tone.Sampler({
+          urls: SALAMANDER_URLS,
+          baseUrl: 'https://tonejs.github.io/audio/salamander/',
+          onload: () => {
+            samplerRef.current = sampler;
+            setIsLoading(false);
+            resolve(sampler);
+          },
+        }).connect(reverb);
+      });
     }
-    if (ctxRef.current.state === 'suspended') ctxRef.current.resume();
-    return ctxRef.current;
+
+    return loadPromise.current;
   }
 
-  function playNote(pc, octave, startTime, duration, velocity = 1) {
-    const ctx              = ctxRef.current;
-    const { wave, dry, reverb } = nodesRef.current;
-    const freq  = pcToHz(pc, octave);
-    const peak  = 0.30 * velocity;
-
-    // ── Main tone ─────────────────────────────────────────────────────────
-    const gain = ctx.createGain();
-    gain.connect(dry);
-    gain.connect(reverb);
-
-    // Piano ADSR: near-instant attack → fast initial decay → slow fade → release
-    const rel = Math.max(duration - 0.07, duration * 0.9);
-    gain.gain.setValueAtTime(0.0001, startTime);
-    gain.gain.linearRampToValueAtTime(peak,          startTime + 0.006);   // 6 ms attack
-    gain.gain.exponentialRampToValueAtTime(peak * 0.28, startTime + 0.12); // fast decay
-    gain.gain.exponentialRampToValueAtTime(peak * 0.09, rel);              // slow fade
-    gain.gain.exponentialRampToValueAtTime(0.0001,    startTime + duration);// release
-
-    const osc = ctx.createOscillator();
-    osc.setPeriodicWave(wave);
-    osc.frequency.value = freq;
-    osc.connect(gain);
-    osc.start(startTime);
-    osc.stop(startTime + duration);
-
-    // ── Hammer click — very short high-frequency burst ────────────────────
-    const clickGain = ctx.createGain();
-    clickGain.connect(dry);
-    clickGain.gain.setValueAtTime(0.055 * velocity, startTime);
-    clickGain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.022);
-
-    const click = ctx.createOscillator();
-    click.frequency.value = freq * 5.5;
-    click.connect(clickGain);
-    click.start(startTime);
-    click.stop(startTime + 0.025);
+  function stop() {
+    if (stopRef.current) stopRef.current();
   }
 
   async function playScale(scalePcs, rootOctave = 4) {
-    const ctx  = getCtx();
+    const sampler = await getSampler();
+    if (stopRef.current) stopRef.current();
+
     setIsPlaying(true);
-    const now  = ctx.currentTime;
-    const step = 0.20;
 
-    scalePcs.forEach((pc, i) => {
+    const now     = Tone.now();
+    const step    = 1.4;
+    const dur     = 1.2;
+    const tail    = 2.2;
+    const totalMs = (scalePcs.length * step + tail) * 1000;
+
+    // True sustaining drone — sine synth holds until explicitly released
+    droneRef.current.triggerAttack(pcToNote(scalePcs[0], rootOctave - 1), now, 0.55);
+
+    // Schedule audio + UI highlight for each note
+    const ids = scalePcs.map((pc, i) => {
       const oct = noteOctave(pc, scalePcs[0], rootOctave);
-      playNote(pc, oct, now + i * step, 0.55, 0.75 + Math.random() * 0.25);
+      sampler.triggerAttackRelease(pcToNote(pc, oct), dur, now + i * step, 0.62 + Math.random() * 0.18);
+      return setTimeout(() => setActivePc(pc), Math.round(i * step * 1000));
     });
+    const clearId = setTimeout(() => setActivePc(null), Math.round(scalePcs.length * step * 1000));
+    const droneId = setTimeout(() => droneRef.current?.triggerRelease(), totalMs);
 
-    await new Promise(r => setTimeout(r, scalePcs.length * step * 1000 + 700));
-    setIsPlaying(false);
+    stopRef.current = () => {
+      ids.forEach(clearTimeout);
+      clearTimeout(clearId);
+      clearTimeout(droneId);
+      sampler.releaseAll();
+      droneRef.current?.triggerRelease();
+      setActivePc(null);
+      setIsPlaying(false);
+      stopRef.current = null;
+    };
+
+    await new Promise(r => setTimeout(r, totalMs + 400));
+    if (stopRef.current) {
+      setIsPlaying(false);
+      stopRef.current = null;
+    }
   }
 
   async function playChord(pcs, rootOctave = 4, mode = 'arpeggio') {
-    const ctx  = getCtx();
+    const sampler = await getSampler();
+    if (stopRef.current) stopRef.current();
+
     setIsPlaying(true);
-    const now  = ctx.currentTime;
+
+    const now  = Tone.now();
     const root = pcs[0];
+    let totalMs;
 
     if (mode === 'block') {
-      // Used by individual note chips — short block
       pcs.forEach(pc => {
         const oct = noteOctave(pc, root, rootOctave);
-        playNote(pc, oct, now, 1.5, 0.75 + Math.random() * 0.25);
+        sampler.triggerAttackRelease(pcToNote(pc, oct), 1.6, now, 0.60 + Math.random() * 0.2);
       });
-      await new Promise(r => setTimeout(r, 1800));
-    } else {
-      // Arpeggio up, then all notes together sustained
-      const step        = 0.13;
-      const arpeggioEnd = pcs.length * step;
-      const blockStart  = now + arpeggioEnd + 0.04;
-
-      // 1 — strum up
+      totalMs = 2100;
+    } else if (mode === 'strum') {
+      // Quick strum only — no sustain block; used by progression player
+      const step = 0.10;
       pcs.forEach((pc, i) => {
         const oct = noteOctave(pc, root, rootOctave);
-        playNote(pc, oct, now + i * step, 0.55, 0.72 + Math.random() * 0.28);
+        sampler.triggerAttackRelease(pcToNote(pc, oct), 1.2, now + i * step, 0.65 + Math.random() * 0.2);
       });
-
-      // 2 — block sustain (slightly softer so it doesn't clip over the tail)
+      totalMs = (pcs.length * step + 1.2) * 1000;
+    } else {
+      const step = 0.13;
+      pcs.forEach((pc, i) => {
+        const oct = noteOctave(pc, root, rootOctave);
+        sampler.triggerAttackRelease(pcToNote(pc, oct), 0.7, now + i * step, 0.65 + Math.random() * 0.2);
+      });
+      const blockStart = now + pcs.length * step + 0.05;
       pcs.forEach(pc => {
         const oct = noteOctave(pc, root, rootOctave);
-        playNote(pc, oct, blockStart, 1.8, 0.60 + Math.random() * 0.20);
+        sampler.triggerAttackRelease(pcToNote(pc, oct), 2.4, blockStart, 0.55 + Math.random() * 0.2);
       });
-
-      const total = arpeggioEnd + 0.04 + 1.8;
-      await new Promise(r => setTimeout(r, total * 1000 + 300));
+      totalMs = (pcs.length * step + 0.05 + 2.4) * 1000;
     }
 
-    setIsPlaying(false);
+    stopRef.current = () => {
+      sampler.releaseAll();
+      setIsPlaying(false);
+      stopRef.current = null;
+    };
+
+    await new Promise(r => setTimeout(r, totalMs + 400));
+    if (stopRef.current) {
+      setIsPlaying(false);
+      stopRef.current = null;
+    }
   }
 
-  return { playScale, playChord, isPlaying };
+  return { playScale, playChord, stop, isPlaying, isLoading, activePc };
 }
