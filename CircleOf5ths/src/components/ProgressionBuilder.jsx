@@ -139,6 +139,35 @@ function TensionBadge({ tension }) {
   );
 }
 
+// ── Voice leading ────────────────────────────────────────────────────────────
+
+function semitoneDistance(a, b) {
+  const up = (b - a + 12) % 12;
+  return Math.min(up, 12 - up);
+}
+function voiceLeadingScore(pcsA, pcsB) {
+  return pcsA.reduce((sum, a) => sum + Math.min(...pcsB.map(b => semitoneDistance(a, b))), 0);
+}
+
+// ── 7th upgrade ──────────────────────────────────────────────────────────────
+
+function upgradeTo7th(chord) {
+  if (!chord.pcs || chord.pcs.length !== 3) return chord;
+  const t = (chord.pcs[1] - chord.pcs[0] + 12) % 12;
+  const f = (chord.pcs[2] - chord.pcs[0] + 12) % 12;
+  let seventh, nameSuffix;
+  if (t === 4 && f === 7)      { seventh = 11; nameSuffix = 'maj7'; }
+  else if (t === 3 && f === 7) { seventh = 10; nameSuffix = '7'; }
+  else if (t === 3 && f === 6) { seventh = 10; nameSuffix = 'm7b5'; }
+  else return chord;
+  const new7 = (chord.pcs[0] + seventh) % 12;
+  // Strip existing quality suffix from name, then append new one
+  const baseName = chord.name.replace(/maj7$|m7b5$|m7$|7$|dim$/, '').replace(/m$/, '');
+  const isMinor  = chord.name.includes('m') && !chord.name.endsWith('dim');
+  const root     = baseName + (isMinor && nameSuffix !== 'maj7' ? 'm' : '');
+  return { ...chord, pcs: [...chord.pcs, new7], name: root + nameSuffix };
+}
+
 // ────────────────────────────────────────────────────────────────────────────
 
 let _uid = 0;
@@ -160,6 +189,8 @@ export default function ProgressionBuilder({
   const [loop,     setLoop]     = useState(true);
   const [saveName, setSaveName] = useState('');
   const [saved,    setSaved]    = useState(loadSaved);
+
+  const [use7ths, setUse7ths] = useState(false);
 
   // Drag-and-drop state
   // dragSource: { type: 'palette', chord } | { type: 'sequence', idx } | null
@@ -481,9 +512,20 @@ export default function ProgressionBuilder({
             const isActive = playing != null && playing.step % sequence.length === idx;
             const src = dragSourceRef.current;
             const isBeingDragged = src?.type === 'sequence' && src.idx === idx;
+            const vlScore = (!isDragging && idx > 0)
+              ? voiceLeadingScore(sequence[idx - 1].pcs, chord.pcs)
+              : null;
+            const vlColor = vlScore === null ? null
+              : vlScore <= 2 ? '#4ade80' : vlScore <= 4 ? '#94a3b8' : vlScore <= 6 ? '#fb923c' : '#f87171';
 
             return (
               <div key={chord.id} className="flex items-center">
+                {vlScore !== null && (
+                  <span className="text-[7px] font-bold px-0.5 leading-none mr-0.5 flex-shrink-0"
+                    style={{ color: vlColor + '99' }} title={`Voice leading: ${vlScore} semitones`}>
+                    {vlScore}
+                  </span>
+                )}
                 <div
                   draggable
                   onDragStart={e => startChipDrag(e, idx)}
@@ -521,7 +563,10 @@ export default function ProgressionBuilder({
       {sequence.length > 0 && (() => {
         const last = sequence[sequence.length - 1];
         const ctx = sequence.map(c => ({ rootPc: c.rootPc, name: c.name, pcs: c.pcs }));
-        const suggestions = getMovementSuggestions(last.rootPc, candidatePool, ctx);
+        const rawSuggestions = getMovementSuggestions(last.rootPc, candidatePool, ctx);
+        const suggestions = use7ths
+          ? rawSuggestions.map(s => ({ ...s, chord: upgradeTo7th(s.chord) }))
+          : rawSuggestions;
         const { cumulativeTension } = analyzeContext(ctx);
         const moodCfg =
           cumulativeTension >= 3 ? { text: 'High tension · resolution expected', color: '#ef4444' } :
@@ -537,6 +582,14 @@ export default function ProgressionBuilder({
               {moodCfg && (
                 <span className="text-[8px] font-semibold" style={{ color: moodCfg.color }}>{moodCfg.text}</span>
               )}
+              <button
+                onClick={() => setUse7ths(v => !v)}
+                className="ml-auto text-[8px] font-bold px-2 py-0.5 rounded-full transition-all"
+                style={use7ths
+                  ? { background: 'rgba(167,139,250,0.25)', border: '1px solid rgba(167,139,250,0.5)', color: '#c4b5fd' }
+                  : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.3)' }}>
+                7ths
+              </button>
             </div>
             <div className="flex flex-col gap-0.5">
               {suggestions.map(({ chord, label, desc, tension, bonus }, i) => {
@@ -601,9 +654,20 @@ export default function ProgressionBuilder({
           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)' }}>
           Clear
         </button>
-        <span className="text-[10px] text-white/20">
+        <span className="text-[10px] text-white/20 flex-1">
           {sequence.length ? `${sequence.length} chord${sequence.length > 1 ? 's' : ''}` : ''}
         </span>
+        <button
+          disabled={!sequence.length}
+          onClick={() => {
+            const text = sequence.map(c => c.name).join(' · ');
+            navigator.clipboard.writeText(text);
+          }}
+          className="px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-opacity disabled:opacity-30 hover:opacity-80"
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)' }}
+          title="Copy progression as text">
+          Copy
+        </button>
       </div>
 
       {/* ── Save / load ── */}

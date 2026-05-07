@@ -1,9 +1,57 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { NOTE_COLORS, pcToName, SCALES } from '../data/musicTheory.js';
 import Piano from './Piano.jsx';
 import GuitarFretboard from './GuitarFretboard.jsx';
 
 const SCALE_OPTIONS = Object.entries(SCALES).map(([key, s]) => ({ key, label: s.label }));
+
+function ScaleDropdown({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const active = value ? SCALE_OPTIONS.find(o => o.key === value) : null;
+
+  useEffect(() => {
+    if (!open) return;
+    function handle(e) { if (!ref.current?.contains(e.target)) setOpen(false); }
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all"
+        style={active
+          ? { background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.4)', color: 'rgba(147,197,253,0.9)' }
+          : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)' }}>
+        {active ? active.label : 'none'}
+        <span className="text-[8px] opacity-60">{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div
+          className="absolute top-full left-0 mt-1 z-50 rounded-xl overflow-hidden py-1"
+          style={{ background: 'rgba(24,24,40,0.97)', border: '1px solid rgba(255,255,255,0.12)', minWidth: '9rem', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+          <button
+            onClick={() => { onChange(null); setOpen(false); }}
+            className="w-full text-left px-3 py-1.5 text-[11px] transition-colors hover:bg-white/10"
+            style={{ color: !active ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.35)', fontWeight: !active ? 600 : 400 }}>
+            None
+          </button>
+          {SCALE_OPTIONS.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => { onChange(key); setOpen(false); }}
+              className="w-full text-left px-3 py-1.5 text-[11px] transition-colors hover:bg-white/10"
+              style={{ color: value === key ? 'rgba(147,197,253,0.95)' : 'rgba(255,255,255,0.55)', fontWeight: value === key ? 700 : 400, background: value === key ? 'rgba(96,165,250,0.1)' : 'transparent' }}>
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function InstrumentPanel({
   currentKeyInfo,
@@ -78,19 +126,7 @@ export default function InstrumentPanel({
           {/* Compare scale selector */}
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] text-white/25">Compare:</span>
-            <select
-              value={compareMode ?? ''}
-              onChange={e => setCompareMode(e.target.value || null)}
-              className="text-[10px] font-semibold rounded-lg px-2 py-1 cursor-pointer"
-              style={{ background: compareMode ? 'rgba(96,165,250,0.15)' : 'rgba(255,255,255,0.06)',
-                       border: compareMode ? '1px solid rgba(96,165,250,0.4)' : '1px solid rgba(255,255,255,0.1)',
-                       color: compareMode ? 'rgba(147,197,253,0.9)' : 'rgba(255,255,255,0.3)',
-                       outline: 'none' }}>
-              <option value="">none</option>
-              {SCALE_OPTIONS.map(({ key, label }) => (
-                <option key={key} value={key}>{label}</option>
-              ))}
-            </select>
+            <ScaleDropdown value={compareMode} onChange={setCompareMode} />
           </div>
         </div>
 
@@ -181,14 +217,18 @@ export default function InstrumentPanel({
 
       {/* Compare legend */}
       {compareScalePcs && (
-        <div className="mt-2 flex items-center gap-3 text-[10px] text-white/30">
+        <div className="mt-2 flex items-center gap-3 flex-wrap text-[10px] text-white/30">
           <span className="flex items-center gap-1">
-            <svg width={12} height={12}><circle cx={6} cy={6} r={5} fill="rgba(96,165,250,0.25)" stroke="rgba(96,165,250,0.7)" strokeWidth={1.5} strokeDasharray="3 2"/></svg>
+            <svg width={14} height={14}><circle cx={7} cy={7} r={4} fill="rgba(167,139,250,0.6)"/></svg>
+            In both
+          </span>
+          <span className="flex items-center gap-1">
+            <svg width={14} height={14}><circle cx={7} cy={7} r={4} fill="rgba(96,165,250,0.2)" stroke="rgba(96,165,250,0.7)" strokeWidth={1.5} strokeDasharray="3 2"/></svg>
             {SCALES[compareMode]?.label} only
           </span>
           <span className="flex items-center gap-1">
-            <svg width={12} height={12}><circle cx={6} cy={6} r={5} fill="rgba(167,139,250,0.6)"/></svg>
-            In both scales
+            <svg width={14} height={14}><circle cx={7} cy={7} r={6} fill="none" stroke="rgba(251,146,60,0.7)" strokeWidth={1.5} strokeDasharray="3 2"/></svg>
+            Current only
           </span>
         </div>
       )}

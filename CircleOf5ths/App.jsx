@@ -1,4 +1,21 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+
+function CollapsiblePanel({ title, children, defaultOpen = true }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="flex flex-col gap-1">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center justify-between px-3 py-1.5 rounded-lg transition-colors hover:bg-white/5"
+        style={{ background: open ? 'transparent' : 'rgba(255,255,255,0.04)', border: open ? 'none' : '1px solid rgba(255,255,255,0.08)' }}
+      >
+        <span className="text-[9px] font-bold tracking-[2px] uppercase text-white/25">{title}</span>
+        <span className="text-white/20 text-[10px] leading-none">{open ? '▲' : '▼'}</span>
+      </button>
+      {open && children}
+    </div>
+  );
+}
 import { musicKeys, circleSlices, SCALES, computeDrawScale, buildDiatonicChords, pcToName, getColorNotePcs } from './src/data/musicTheory.js';
 import { useAudio } from './src/hooks/useAudio.js';
 import Header from './src/components/Header.jsx';
@@ -205,16 +222,16 @@ export default function App() {
               scaleMode={scaleMode}
             />
             <ScaleFormulaStrip scaleMode={scaleMode} />
-          </div>
-
-          {/* Right column */}
-          <div className="flex-1 flex flex-col gap-4 min-w-0">
             <Staff
               currentKeyInfo={currentKeyInfo}
               activeDrawScale={activeDrawScale}
               scaleLabel={scaleLabel}
               keySignature={parentKeyName ? musicKeys[parentKeyName] : currentKeyInfo}
             />
+          </div>
+
+          {/* Right column */}
+          <div className="flex-1 flex flex-col gap-4 min-w-0">
             <DiatonicChords
               activeScalePcs={activeScalePcs}
               scaleMode={scaleMode}
@@ -224,34 +241,40 @@ export default function App() {
               chordVariant={chordVariant}
               onChordVariantChange={setChordVariant}
             />
-<ProgressionBuilder
-              activeScalePcs={activeScalePcs}
-              scaleMode={scaleMode}
-              rootPc={currentKeyInfo.rootPc}
-              isFlat={isFlat}
-              playChord={audio.playChord}
-              onHighlightChord={handleHighlightChord}
-            />
-            <CommonProgressions
-              scaleMode={scaleMode}
-              diatonicChords={diatonicChords}
-              onChordSelect={handleProgressionStep}
-              playChord={audio.playChord}
-              currentKeyInfo={currentKeyInfo}
-              activeScalePcs={activeScalePcs}
-              isFlat={isFlat}
-              parentKeyName={parentKeyName}
-              onHighlightChord={handleHighlightChord}
-            />
-            <AIAssistant
-              currentKeyInfo={currentKeyInfo}
-              scaleLabel={scaleLabel}
-              scaleMode={scaleMode}
-              activeScalePcs={activeScalePcs}
-              isFlat={isFlat}
-              parentKeyName={parentKeyName}
-              onHighlightChord={handleHighlightChord}
-            />
+            <CollapsiblePanel title="Progression Builder">
+              <ProgressionBuilder
+                activeScalePcs={activeScalePcs}
+                scaleMode={scaleMode}
+                rootPc={currentKeyInfo.rootPc}
+                isFlat={isFlat}
+                playChord={audio.playChord}
+                onHighlightChord={handleHighlightChord}
+              />
+            </CollapsiblePanel>
+            <CollapsiblePanel title="Common Progressions">
+              <CommonProgressions
+                scaleMode={scaleMode}
+                diatonicChords={diatonicChords}
+                onChordSelect={handleProgressionStep}
+                playChord={audio.playChord}
+                currentKeyInfo={currentKeyInfo}
+                activeScalePcs={activeScalePcs}
+                isFlat={isFlat}
+                parentKeyName={parentKeyName}
+                onHighlightChord={handleHighlightChord}
+              />
+            </CollapsiblePanel>
+            <CollapsiblePanel title="AI Assistant" defaultOpen={false}>
+              <AIAssistant
+                currentKeyInfo={currentKeyInfo}
+                scaleLabel={scaleLabel}
+                scaleMode={scaleMode}
+                activeScalePcs={activeScalePcs}
+                isFlat={isFlat}
+                parentKeyName={parentKeyName}
+                onHighlightChord={handleHighlightChord}
+              />
+            </CollapsiblePanel>
           </div>
         </div>
       </main>

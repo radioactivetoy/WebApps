@@ -53,11 +53,24 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
     return !!(compareScalePcs?.has(pc) && !scalePcsSet.has(pc) && !chordPcsSet?.has(pc));
   }
 
+  function showMissingDot(pc) {
+    return !!(compareScalePcs && scalePcsSet.has(pc) && !compareScalePcs.has(pc) && !chordPcsSet?.has(pc));
+  }
+
   function renderCompareDot(pc, cx, cy, r) {
     return (
       <g>
         <circle cx={cx} cy={cy} r={r} fill="rgba(96,165,250,0.15)"
           stroke="rgba(96,165,250,0.65)" strokeWidth={1.5} strokeDasharray="3 2" />
+      </g>
+    );
+  }
+
+  function renderMissingDot(pc, cx, cy, r) {
+    return (
+      <g>
+        <circle cx={cx} cy={cy} r={r + 3} fill="none"
+          stroke="rgba(251,146,60,0.7)" strokeWidth={1.5} strokeDasharray="3 2" />
       </g>
     );
   }
@@ -123,6 +136,7 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
               <path d={kPath(x, WHITE_W - 1, WHITE_H, 4)} fill="#f2f0f7" />
               {showCompareDot(k.pc) && renderCompareDot(k.pc, cx, cy, W_R)}
               {showDot(k.pc) && renderDot(k.pc, cx, cy, W_R)}
+              {showMissingDot(k.pc) && renderMissingDot(k.pc, cx, cy, W_R)}
             </g>
           );
         })}
@@ -137,6 +151,7 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
               <path d={kPath(x, BLACK_W, BLACK_H, 3)} fill="#252033" />
               {showCompareDot(k.pc) && renderCompareDot(k.pc, cx, cy, B_R)}
               {showDot(k.pc) && renderDot(k.pc, cx, cy, B_R)}
+              {showMissingDot(k.pc) && renderMissingDot(k.pc, cx, cy, B_R)}
             </g>
           );
         })}
