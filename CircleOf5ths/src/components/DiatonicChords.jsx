@@ -1,5 +1,38 @@
+import { useState, useEffect } from 'react';
 import { NOTE_COLORS, buildDiatonicChords,
   majorHarmonicFn, minorHarmonicFn, HARMONIC_FN_COLORS } from '../data/musicTheory.js';
+
+// Degree patterns: 0=I, 1=ii, 2=iii, 3=IV, 4=V, 5=vi, 6=vii°
+const NAMED_PATTERNS = [
+  { name: 'Pop  (I–V–vi–IV)',         pattern: [0,4,5,3] },
+  { name: '50s / Do-Wop  (I–vi–IV–V)', pattern: [0,5,3,4] },
+  { name: 'Classic Rock  (I–IV–V)',   pattern: [0,3,4] },
+  { name: 'I–IV–V–I  (Blues)',        pattern: [0,3,4,0] },
+  { name: 'Jazz ii–V–I',              pattern: [1,4,0] },
+  { name: 'Jazz Turnaround  (I–vi–ii–V)', pattern: [0,5,1,4] },
+  { name: 'Nashville  (I–ii–IV–V)',   pattern: [0,1,3,4] },
+  { name: 'Let It Be  (I–IV–vi–V)',   pattern: [0,3,5,4] },
+  { name: 'Pachelbel Canon  (I–V–vi–iii–IV)', pattern: [0,4,5,2,3] },
+  { name: 'Axis  (vi–IV–I–V)',        pattern: [5,3,0,4] },
+  { name: 'Power Ballad  (I–V–IV)',   pattern: [0,4,3] },
+  { name: 'Andalusian  (i–VII–VI–V)', pattern: [0,6,5,4] },
+  { name: 'Pop Minor  (i–VI–III–VII)', pattern: [0,5,2,6] },
+  { name: 'Minor Rock  (i–VII–VI–VII)', pattern: [0,6,5,6] },
+  { name: 'Circle of 4ths',          pattern: [2,5,1,4,0,3] },
+  { name: 'iii–vi–II–V  (Jazz)',      pattern: [2,5,1,4] },
+  { name: 'I–IV Vamp',               pattern: [0,3] },
+  { name: 'i–VII Vamp',              pattern: [0,6] },
+];
+
+function recognizeProgression(history) {
+  if (history.length < 2) return null;
+  for (const { name, pattern } of NAMED_PATTERNS) {
+    if (history.length < pattern.length) continue;
+    const tail = history.slice(-pattern.length);
+    if (tail.every((d, i) => d === pattern[i])) return name;
+  }
+  return null;
+}
 
 const VARIANTS = [
   ['triad',      'Triad'],
@@ -29,6 +62,21 @@ export default function DiatonicChords({
 }) {
   const is7Note = activeScalePcs.length === 7;
   const showHarmonicFn = scaleMode === 'major' || scaleMode === 'minor';
+
+  const [chordHistory, setChordHistory] = useState([]);
+  const scaleKey = activeScalePcs.join(',');
+  useEffect(() => { setChordHistory([]); }, [scaleKey]);
+
+  function handleChordClick(degree, isActive) {
+    const newDegree = isActive ? null : degree;
+    onChordSelect(newDegree);
+    if (newDegree !== null) {
+      setChordHistory(h => {
+        if (h[h.length - 1] === newDegree) return h;
+        return [...h.slice(-7), newDegree];
+      });
+    }
+  }
 
   // Grid always shows triads for overview; variant affects only the selected chord
   const chords = is7Note
@@ -69,7 +117,7 @@ export default function DiatonicChords({
               return (
                 <button
                   key={chord.degree}
-                  onClick={() => onChordSelect(isActive ? null : chord.degree)}
+                  onClick={() => handleChordClick(chord.degree, isActive)}
                   className="flex flex-col items-center justify-center py-2 px-1 rounded-xl border text-center transition-all"
                   style={isActive
                     ? { background: `${chord.color}25`, borderColor: `${chord.color}70`, boxShadow: `0 0 14px ${chord.color}30` }
@@ -95,6 +143,38 @@ export default function DiatonicChords({
               );
             })}
           </div>
+
+          {chordHistory.length >= 2 && (() => {
+            const match = recognizeProgression(chordHistory);
+            return (
+              <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-white/[0.06] flex-wrap">
+                {chordHistory.map((deg, i) => {
+                  const c = chords[deg];
+                  if (!c) return null;
+                  return (
+                    <span key={i} className="flex items-center gap-1">
+                      {i > 0 && <span className="text-[9px] text-white/15">→</span>}
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
+                        style={{ background: `${c.color}20`, color: c.color }}>
+                        {c.numeral}
+                      </span>
+                    </span>
+                  );
+                })}
+                {match && (
+                  <span className="ml-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                    style={{ background: 'rgba(167,139,250,0.18)', border: '1px solid rgba(167,139,250,0.35)', color: 'rgba(167,139,250,0.9)' }}>
+                    ✓ {match}
+                  </span>
+                )}
+                <button
+                  onClick={() => setChordHistory([])}
+                  className="ml-auto text-[9px] text-white/20 hover:text-white/40 transition-colors px-1">
+                  ×
+                </button>
+              </div>
+            );
+          })()}
 
           {selectedTriad && (
             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/[0.06] flex-wrap">

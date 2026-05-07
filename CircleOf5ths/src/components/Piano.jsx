@@ -14,7 +14,7 @@ function kPath(x, w, h, r) {
   return `M${x} 0L${x+w} 0L${x+w} ${h-r}Q${x+w} ${h} ${x+w-r} ${h}L${x+r} ${h}Q${x} ${h} ${x} ${h-r}Z`;
 }
 
-export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, activeChordRoot, isFlat, labelMode, scaleLabel, colorPcs, activePc }) {
+export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, activeChordRoot, isFlat, labelMode, scaleLabel, colorPcs, activePc, compareScalePcs }) {
   const { rootPc } = currentKeyInfo;
   const scalePcsSet  = new Set(activeScalePcs);
   const chordPcsSet  = activeChordPcs ? new Set(activeChordPcs) : null;
@@ -47,6 +47,19 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
       return INTERVAL_LABELS[diff].short;
     }
     return pcToName(pc, isFlat);
+  }
+
+  function showCompareDot(pc) {
+    return !!(compareScalePcs?.has(pc) && !scalePcsSet.has(pc) && !chordPcsSet?.has(pc));
+  }
+
+  function renderCompareDot(pc, cx, cy, r) {
+    return (
+      <g>
+        <circle cx={cx} cy={cy} r={r} fill="rgba(96,165,250,0.15)"
+          stroke="rgba(96,165,250,0.65)" strokeWidth={1.5} strokeDasharray="3 2" />
+      </g>
+    );
   }
 
   function renderDot(pc, cx, cy, r) {
@@ -108,6 +121,7 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
           return (
             <g key={k.note}>
               <path d={kPath(x, WHITE_W - 1, WHITE_H, 4)} fill="#f2f0f7" />
+              {showCompareDot(k.pc) && renderCompareDot(k.pc, cx, cy, W_R)}
               {showDot(k.pc) && renderDot(k.pc, cx, cy, W_R)}
             </g>
           );
@@ -121,6 +135,7 @@ export default function Piano({ currentKeyInfo, activeScalePcs, activeChordPcs, 
           return (
             <g key={k.note}>
               <path d={kPath(x, BLACK_W, BLACK_H, 3)} fill="#252033" />
+              {showCompareDot(k.pc) && renderCompareDot(k.pc, cx, cy, B_R)}
               {showDot(k.pc) && renderDot(k.pc, cx, cy, B_R)}
             </g>
           );

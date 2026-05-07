@@ -1,7 +1,9 @@
-import { useState } from 'react';
-import { NOTE_COLORS, pcToName } from '../data/musicTheory.js';
+import { useState, useMemo } from 'react';
+import { NOTE_COLORS, pcToName, SCALES } from '../data/musicTheory.js';
 import Piano from './Piano.jsx';
 import GuitarFretboard from './GuitarFretboard.jsx';
+
+const SCALE_OPTIONS = Object.entries(SCALES).map(([key, s]) => ({ key, label: s.label }));
 
 export default function InstrumentPanel({
   currentKeyInfo,
@@ -16,9 +18,18 @@ export default function InstrumentPanel({
   const { rootPc } = currentKeyInfo;
   const { playScale, playChord, stop, isPlaying, isLoading, activePc } = audio;
   const [showColorNotes, setShowColorNotes] = useState(true);
+  const [compareMode,    setCompareMode]    = useState(null);
 
-  const hasColorNotes = colorNotePcs?.size > 0;
-  const colorPcs = showColorNotes && hasColorNotes && !activeChordPcs ? colorNotePcs : null;
+  const hasColorNotes  = colorNotePcs?.size > 0;
+  const colorPcs       = showColorNotes && hasColorNotes && !activeChordPcs ? colorNotePcs : null;
+
+  // Pitch classes of the comparison scale, relative to the same root
+  const compareScalePcs = useMemo(() => {
+    if (!compareMode) return null;
+    const intervals = SCALES[compareMode]?.intervals;
+    if (!intervals) return null;
+    return new Set(intervals.map(i => (rootPc + i) % 12));
+  }, [compareMode, rootPc]);
 
   const chips = activeChordPcs
     ? activeChordPcs.map(pc => ({ pc, label: pcToName(pc, isFlat) }))
@@ -36,9 +47,10 @@ export default function InstrumentPanel({
   return (
     <div className="rounded-2xl px-5 py-4"
       style={{ background: 'rgba(255,255,255,0.045)', border: '1px solid rgba(255,255,255,0.09)' }}>
+
       {/* Header row */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <span className="text-[10px] font-bold tracking-[2px] text-white/25 uppercase">Instrument View</span>
           {/* Notes / Intervals toggle */}
           <div className="flex bg-white/[0.06] rounded-lg p-0.5 gap-0.5">
@@ -60,10 +72,28 @@ export default function InstrumentPanel({
               style={showColorNotes
                 ? { background: 'rgba(251,191,36,0.2)', border: '1px solid rgba(251,191,36,0.5)', color: 'rgba(251,191,36,0.9)' }
                 : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)' }}>
-              ◆ Color tones
+              ◆ Characteristic tones
             </button>
           )}
+          {/* Compare scale selector */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] text-white/25">Compare:</span>
+            <select
+              value={compareMode ?? ''}
+              onChange={e => setCompareMode(e.target.value || null)}
+              className="text-[10px] font-semibold rounded-lg px-2 py-1 cursor-pointer"
+              style={{ background: compareMode ? 'rgba(96,165,250,0.15)' : 'rgba(255,255,255,0.06)',
+                       border: compareMode ? '1px solid rgba(96,165,250,0.4)' : '1px solid rgba(255,255,255,0.1)',
+                       color: compareMode ? 'rgba(147,197,253,0.9)' : 'rgba(255,255,255,0.3)',
+                       outline: 'none' }}>
+              <option value="">none</option>
+              {SCALE_OPTIONS.map(({ key, label }) => (
+                <option key={key} value={key}>{label}</option>
+              ))}
+            </select>
+          </div>
         </div>
+
         {/* Piano / Guitar toggle */}
         <div className="flex bg-white/[0.06] rounded-lg p-0.5 gap-0.5">
           {[['piano','🎹 Piano'],['guitar','🎸 Guitar']].map(([mode, label]) => (
@@ -91,6 +121,7 @@ export default function InstrumentPanel({
           scaleLabel={scaleLabel}
           colorPcs={colorPcs}
           activePc={activePc}
+          compareScalePcs={compareScalePcs}
         />
       ) : (
         <div className="mt-1 mb-1">
@@ -105,6 +136,8 @@ export default function InstrumentPanel({
             labelMode={labelMode}
             isFlat={isFlat}
             colorPcs={colorPcs}
+            activePc={activePc}
+            compareScalePcs={compareScalePcs}
           />
         </div>
       )}
@@ -145,6 +178,20 @@ export default function InstrumentPanel({
           {activeName || currentKeyInfo.label}
         </span>
       </div>
+
+      {/* Compare legend */}
+      {compareScalePcs && (
+        <div className="mt-2 flex items-center gap-3 text-[10px] text-white/30">
+          <span className="flex items-center gap-1">
+            <svg width={12} height={12}><circle cx={6} cy={6} r={5} fill="rgba(96,165,250,0.25)" stroke="rgba(96,165,250,0.7)" strokeWidth={1.5} strokeDasharray="3 2"/></svg>
+            {SCALES[compareMode]?.label} only
+          </span>
+          <span className="flex items-center gap-1">
+            <svg width={12} height={12}><circle cx={6} cy={6} r={5} fill="rgba(167,139,250,0.6)"/></svg>
+            In both scales
+          </span>
+        </div>
+      )}
     </div>
   );
 }

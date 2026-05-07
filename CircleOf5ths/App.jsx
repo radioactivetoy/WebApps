@@ -12,7 +12,7 @@ import ScaleSelector from './src/components/ScaleSelector.jsx';
 import RootPicker from './src/components/RootPicker.jsx';
 import ScaleFormulaStrip from './src/components/ScaleFormulaStrip.jsx';
 import CommonProgressions from './src/components/CommonProgressions.jsx';
-import ChordFamilyTable from './src/components/ChordFamilyTable.jsx';
+import ProgressionBuilder from './src/components/ProgressionBuilder.jsx';
 
 export default function App() {
   const audio = useAudio();
@@ -20,10 +20,12 @@ export default function App() {
   const [selectedChordDegree, setSelectedChordDegree]   = useState(null);
   const [customChordHighlight, setCustomChordHighlight] = useState(null);
   const [chordVariant, setChordVariant]                 = useState('triad');
-  const [instrumentMode, setInstrumentMode]             = useState('piano');
+  const [instrumentMode, setInstrumentMode]             = useState(() => localStorage.getItem('co5_instrument') || 'piano');
   const [labelMode, setLabelMode]                       = useState('notes');
   const [scaleMode, setScaleMode]                       = useState('major');
   const [rotationAngle, setRotationAngle]               = useState(0);
+
+  useEffect(() => { localStorage.setItem('co5_instrument', instrumentMode); }, [instrumentMode]);
 
   const currentKeyInfo = musicKeys[selectedKey];
   const selectedIndex = circleSlices.findIndex(
@@ -67,6 +69,7 @@ export default function App() {
   useEffect(() => {
     setSelectedChordDegree(null);
     setCustomChordHighlight(null);
+    setChordVariant('triad');
     setScaleMode(currentKeyInfo.type === 'minor' ? 'minor' : 'major');
     setRotationAngle(prev => {
       const cur = ((prev % 360) + 360) % 360;
@@ -84,9 +87,12 @@ export default function App() {
     [activeScalePcs, isFlat]
   );
 
-  const activeChord = selectedChordDegree !== null
-    ? buildDiatonicChords(activeScalePcs, isFlat, chordVariant)[selectedChordDegree]
-    : null;
+  const diatonicChordsVariant = useMemo(
+    () => activeScalePcs.length === 7 ? buildDiatonicChords(activeScalePcs, isFlat, chordVariant) : [],
+    [activeScalePcs, isFlat, chordVariant]
+  );
+
+  const activeChord = selectedChordDegree !== null ? diatonicChordsVariant[selectedChordDegree] : null;
   const activePcs   = customChordHighlight?.pcs  || activeChord?.pcs  || null;
   const activeRoot  = customChordHighlight ? customChordHighlight.rootPc : activeChord?.rootPc;
   const activeName  = customChordHighlight ? customChordHighlight.name  : activeChord?.name;
@@ -116,6 +122,7 @@ export default function App() {
     setScaleMode(mode);
     setSelectedChordDegree(null);
     setCustomChordHighlight(null);
+    setChordVariant('triad');
     // parentKeyName memo is stale here (mode state not yet applied), so we recompute
     const offset = SCALES[mode].parentOffset;
     if (offset !== null) {
@@ -217,13 +224,12 @@ export default function App() {
               chordVariant={chordVariant}
               onChordVariantChange={setChordVariant}
             />
-            <ChordFamilyTable
+<ProgressionBuilder
               activeScalePcs={activeScalePcs}
               scaleMode={scaleMode}
               rootPc={currentKeyInfo.rootPc}
               isFlat={isFlat}
-              selectedChordDegree={selectedChordDegree}
-              onChordSelect={handleChordSelect}
+              playChord={audio.playChord}
               onHighlightChord={handleHighlightChord}
             />
             <CommonProgressions
@@ -231,6 +237,11 @@ export default function App() {
               diatonicChords={diatonicChords}
               onChordSelect={handleProgressionStep}
               playChord={audio.playChord}
+              currentKeyInfo={currentKeyInfo}
+              activeScalePcs={activeScalePcs}
+              isFlat={isFlat}
+              parentKeyName={parentKeyName}
+              onHighlightChord={handleHighlightChord}
             />
             <AIAssistant
               currentKeyInfo={currentKeyInfo}

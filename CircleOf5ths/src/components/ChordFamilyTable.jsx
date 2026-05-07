@@ -2,12 +2,12 @@ import { NOTE_COLORS, buildDiatonicChords,
   majorHarmonicFn, minorHarmonicFn, HARMONIC_FN_COLORS, pcToName } from '../data/musicTheory.js';
 
 const PARALLEL_INTERVALS = {
-  major:       [0, 2, 3, 5, 7, 8, 10], // borrow from parallel minor
-  dorian:      [0, 2, 4, 5, 7, 9, 11], // borrow from parallel major
+  major:       [0, 2, 3, 5, 7, 8, 10],
+  dorian:      [0, 2, 4, 5, 7, 9, 11],
   phrygian:    [0, 2, 4, 5, 7, 9, 11],
   lydian:      [0, 2, 3, 5, 7, 8, 10],
   mixolydian:  [0, 2, 3, 5, 7, 8, 10],
-  minor:       [0, 2, 4, 5, 7, 9, 11], // borrow from parallel major
+  minor:       [0, 2, 4, 5, 7, 9, 11],
   locrian:     [0, 2, 4, 5, 7, 9, 11],
   'mel-minor':    [0, 2, 4, 5, 7, 9, 11],
   'harm-minor':   [0, 2, 4, 5, 7, 9, 11],
@@ -80,7 +80,7 @@ export default function ChordFamilyTable({
 
       <div className="flex flex-col gap-1.5">
 
-        {/* ── ii chords: both m7 and dom7 options stacked ── */}
+        {/* ── Approach chords ── */}
         <div className="flex items-stretch gap-0">
           <RowLabel>Approach</RowLabel>
           <div className="flex-1 grid grid-cols-7 gap-1.5">
@@ -103,7 +103,7 @@ export default function ChordFamilyTable({
               const textStyle = { color: `${color}AA` };
 
               return (
-                <div key={chord.degree} className="flex flex-row gap-0.5">
+                <div key={chord.degree} className="grid grid-cols-2 gap-0.5">
                   <button
                     onClick={() => onHighlightChord?.({ pcs: minorPcs, rootPc: iiRoot, name: minorName })}
                     className="flex-1 flex items-center justify-center py-1.5 rounded-md border text-center transition-all hover:opacity-75"
@@ -146,7 +146,7 @@ export default function ChordFamilyTable({
           </div>
         </div>
 
-        {/* ── Main family ── */}
+        {/* ── Diatonic family ── */}
         <div className="flex items-stretch gap-0">
           <RowLabel>Diatonic</RowLabel>
           <div className="flex-1 grid grid-cols-7 gap-1.5">
@@ -174,6 +174,30 @@ export default function ChordFamilyTable({
                       {chord.fn}
                     </span>
                   )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── Tritone substitutions ── */}
+        <div className="flex items-stretch gap-0">
+          <RowLabel>Tri-Sub</RowLabel>
+          <div className="flex-1 grid grid-cols-7 gap-1.5">
+            {chords.map(chord => {
+              const triRoot = (chord.rootPc + 1) % 12;
+              const triPcs = [0, 4, 7, 10].map(n => (triRoot + n) % 12);
+              const triName = pcToName(triRoot, isFlat) + '7';
+              const color = NOTE_COLORS[triRoot];
+              return (
+                <button
+                  key={chord.degree}
+                  onClick={() => onHighlightChord?.({ pcs: triPcs, rootPc: triRoot, name: triName })}
+                  className="flex flex-col items-center justify-center py-1.5 rounded-lg border text-center transition-all hover:opacity-75"
+                  style={{ background: `${color}0E`, borderColor: `${color}28` }}>
+                  <span className="text-[9px] font-semibold leading-tight" style={{ color: `${color}AA` }}>
+                    {triName}
+                  </span>
                 </button>
               );
             })}
