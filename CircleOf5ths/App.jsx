@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 
 function CollapsiblePanel({ title, children, defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -41,6 +41,8 @@ export default function App() {
   const [labelMode, setLabelMode]                       = useState('notes');
   const [scaleMode, setScaleMode]                       = useState('major');
   const [rotationAngle, setRotationAngle]               = useState(0);
+  const [progressionSequence, setProgressionSequence]   = useState([]);
+  const progressionBuilderRef                            = useRef(null);
 
   useEffect(() => { localStorage.setItem('co5_instrument', instrumentMode); }, [instrumentMode]);
 
@@ -121,7 +123,6 @@ export default function App() {
   function handleChordSelect(degree) {
     setSelectedChordDegree(degree);
     setCustomChordHighlight(null);
-    setChordVariant('triad');
   }
 
   function handleHighlightChord(info) {
@@ -243,15 +244,17 @@ export default function App() {
             />
             <CollapsiblePanel title="Progression Builder">
               <ProgressionBuilder
+                ref={progressionBuilderRef}
                 activeScalePcs={activeScalePcs}
                 scaleMode={scaleMode}
                 rootPc={currentKeyInfo.rootPc}
                 isFlat={isFlat}
                 playChord={audio.playChord}
                 onHighlightChord={handleHighlightChord}
+                onSequenceChange={setProgressionSequence}
               />
             </CollapsiblePanel>
-            <CollapsiblePanel title="Common Progressions">
+            <CollapsiblePanel title="Common Progressions" defaultOpen={false}>
               <CommonProgressions
                 scaleMode={scaleMode}
                 diatonicChords={diatonicChords}
@@ -273,6 +276,9 @@ export default function App() {
                 isFlat={isFlat}
                 parentKeyName={parentKeyName}
                 onHighlightChord={handleHighlightChord}
+                progressionSequence={progressionSequence}
+                diatonicChords={diatonicChords}
+                onAddToProgression={(chord) => progressionBuilderRef.current?.addChord(chord)}
               />
             </CollapsiblePanel>
           </div>

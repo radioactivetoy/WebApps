@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { NOTE_COLORS, buildDiatonicChords, pcToName,
   majorHarmonicFn, minorHarmonicFn, HARMONIC_FN_COLORS } from '../data/musicTheory.js';
 
@@ -168,6 +168,28 @@ function upgradeTo7th(chord) {
   return { ...chord, pcs: [...chord.pcs, new7], name: root + nameSuffix };
 }
 
+const PALETTE_VARIANTS = [
+  ['triad',      'Triad'],
+  ['seventh',    '7th'],
+  ['ninth',      '9th'],
+  ['eleventh',   '11th'],
+  ['thirteenth', '13th'],
+  ['sixth',      '6th'],
+  ['six-nine',   '6/9'],
+  ['seven-sus4', '7sus4'],
+  ['sus2',       'Sus2'],
+  ['sus4',       'Sus4'],
+  ['add9',       'Add9'],
+  ['add11',      'Add11'],
+  ['dom7b9',     '7b9'],
+  ['dom7s9',     '7#9'],
+  ['dom7s11',    '7#11'],
+  ['dom7alt',    '7alt'],
+  ['chrom-dim7', 'dim7'],
+  ['chrom-aug',  'Aug+'],
+  ['mmaj7',      'mMaj7'],
+];
+
 // ────────────────────────────────────────────────────────────────────────────
 
 let _uid = 0;
@@ -179,10 +201,10 @@ function loadSaved() {
   catch { return []; }
 }
 
-export default function ProgressionBuilder({
+const ProgressionBuilder = forwardRef(function ProgressionBuilder({
   activeScalePcs, scaleMode, rootPc, isFlat,
-  playChord, onHighlightChord,
-}) {
+  playChord, onHighlightChord, onSequenceChange,
+}, ref) {
   const [sequence, setSequence] = useState([]);
   const [playing,  setPlaying]  = useState(null);
   const [bpm,      setBpm]      = useState(80);
@@ -190,7 +212,8 @@ export default function ProgressionBuilder({
   const [saveName, setSaveName] = useState('');
   const [saved,    setSaved]    = useState(loadSaved);
 
-  const [use7ths, setUse7ths] = useState(false);
+  const [use7ths,       setUse7ths]       = useState(false);
+  const [paletteVariant, setPaletteVariant] = useState('triad');
 
   // Drag-and-drop state
   // dragSource: { type: 'palette', chord } | { type: 'sequence', idx } | null
@@ -209,9 +232,16 @@ export default function ProgressionBuilder({
   highlightRef.current = onHighlightChord;
 
   // ── Chord palette data ──────────────────────────────────────────────────────
-  const diatonic = useMemo(() =>
+  // Triads kept separately for candidate pool / borrowed quality comparisons
+  const diatonicTriads = useMemo(() =>
     is7Note ? buildDiatonicChords(activeScalePcs, isFlat, 'triad') : [],
     [activeScalePcs, isFlat, is7Note]
+  );
+
+  // Palette display uses the selected voicing variant
+  const diatonic = useMemo(() =>
+    is7Note ? buildDiatonicChords(activeScalePcs, isFlat, paletteVariant) : [],
+    [activeScalePcs, isFlat, is7Note, paletteVariant]
   );
 
   const secDom = useMemo(() =>
@@ -248,15 +278,15 @@ export default function ProgressionBuilder({
     if (!intervals) return [];
     return buildDiatonicChords(intervals.map(i => (rootPc+i)%12), isFlat, 'triad').map((c, i) => {
       const q = triadQuality(c.pcs);
-      const mainQ = triadQuality(diatonic[i]?.pcs ?? [0,4,7]);
-      const isSame = c.rootPc === diatonic[i]?.rootPc && q === mainQ;
+      const mainQ = triadQuality(diatonicTriads[i]?.pcs ?? [0,4,7]);
+      const isSame = c.rootPc === diatonicTriads[i]?.rootPc && q === mainQ;
       return { ...c, numeral: borrowedNumeral(c.rootPc, rootPc, q), isSame, category: 'borrow' };
     });
-  }, [scaleMode, rootPc, isFlat, diatonic]);
+  }, [scaleMode, rootPc, isFlat, diatonicTriads]);
 
   const candidatePool = useMemo(
-    () => buildCandidatePool(diatonic, borrowed, rootPc, isFlat),
-    [diatonic, borrowed, rootPc, isFlat]
+    () => buildCandidatePool(diatonicTriads, borrowed, rootPc, isFlat),
+    [diatonicTriads, borrowed, rootPc, isFlat]
   );
 
   // ── Playback effect ─────────────────────────────────────────────────────────
@@ -283,6 +313,11 @@ export default function ProgressionBuilder({
   }, [playing, stepMs, loop]);
 
   useEffect(() => { if (sequence.length === 0) setPlaying(null); }, [sequence.length]);
+  useEffect(() => { onSequenceChange?.(sequence); }, [sequence, onSequenceChange]);
+
+  useImperativeHandle(ref, () => ({
+    addChord: (chord) => setSequence(s => [...s, { ...chord, id: uid() }]),
+  }));
 
   // ── Sequence helpers ────────────────────────────────────────────────────────
   function insertChord(chord, gapIdx) {
@@ -441,6 +476,22 @@ export default function ProgressionBuilder({
             ↺ Loop
           </button>
         </div>
+      </div>
+
+      {/* ── Palette voicing selector ── */}
+      <div className="flex items-center gap-1 mb-2 flex-wrap">
+        <span className="text-[8px] font-bold tracking-widest uppercase text-white/20 mr-0.5">Voicing</span>
+        {PALETTE_VARIANTS.map(([val, label]) => (
+          <button
+            key={val}
+            onClick={() => setPaletteVariant(val)}
+            className="px-2 py-0.5 rounded-md text-[9px] font-semibold transition-colors"
+            style={paletteVariant === val
+              ? { background: 'rgba(167,139,250,0.2)', border: '1px solid rgba(167,139,250,0.4)', color: 'rgba(167,139,250,0.9)' }
+              : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)' }}>
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* ── Chord palette ── */}
@@ -715,4 +766,6 @@ export default function ProgressionBuilder({
       </div>
     </div>
   );
-}
+});
+
+export default ProgressionBuilder;

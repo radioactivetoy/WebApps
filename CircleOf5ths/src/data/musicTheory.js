@@ -298,6 +298,10 @@ export function buildDiatonicChords(scalePcs, isFlat, chordType) {
         numeral = roman + '+';
         name = root + 'aug';
         pcs = [0,4,8].map(n => (rootPc+n)%12); break;
+      case 'mmaj7':
+        numeral = roman.toLowerCase() + 'mMaj7';
+        name = root + 'mMaj7';
+        pcs = [0,3,7,11].map(n => (rootPc+n)%12); break;
       default: // triad
         name = root + suffix; pcs = [rootPc, third, fifth]; break;
     }

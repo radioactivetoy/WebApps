@@ -54,6 +54,7 @@ const VARIANTS = [
   ['dom7alt',    '7alt'],
   ['chrom-dim7', 'dim7'],
   ['chrom-aug',  'Aug+'],
+  ['mmaj7',      'mMaj7'],
 ];
 
 export default function DiatonicChords({
@@ -78,9 +79,8 @@ export default function DiatonicChords({
     }
   }
 
-  // Grid always shows triads for overview; variant affects only the selected chord
   const chords = is7Note
-    ? buildDiatonicChords(activeScalePcs, isFlat, 'triad').map((c, i) => ({
+    ? buildDiatonicChords(activeScalePcs, isFlat, chordVariant).map((c, i) => ({
         ...c,
         color: NOTE_COLORS[c.rootPc],
         fn: scaleMode === 'major' ? majorHarmonicFn[i]
