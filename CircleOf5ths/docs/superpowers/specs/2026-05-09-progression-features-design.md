@@ -52,34 +52,58 @@ Wrap the `<Piano />` and `<GuitarFretboard />` render output in:
 Inside `ProgressionBuilder.jsx`, in the playback controls row (alongside ▶, Clear, chord count, Copy).
 
 ### UI
-A compact row of 12 chromatic root buttons using the existing `NOTE_COLORS` palette, labeled with the key's note name (respecting `isFlat`). Appears only when `sequence.length > 0`. Tapping a root transposes the entire sequence to that key.
+A single small **"⇅ Transpose"** button in the playback controls row (next to Clear and Copy). Visible only when `sequence.length > 0`. Clicking it toggles a compact popover anchored below the button showing the 12 chromatic note buttons. After the user picks a target root the popover closes automatically. Clicking outside also closes it.
 
 ```
-[C] [C#] [D] [D#] [E] [F] [F#] [G] [G#] [A] [A#] [B]
+[ ▶ ] [ Clear ] [ 3 chords ] [ Copy ] [ ⇅ Transpose ]
+                                              ↓ (popover)
+                                       [C][C#][D][D#][E][F]
+                                       [F#][G][G#][A][A#][B]
 ```
 
-The button for the current apparent root of the first chord is highlighted.
+State: `const [transposeOpen, setTransposeOpen] = useState(false)`.  
+Popover is `position: absolute` relative to a wrapper `div` on the button, z-index 40.  
+Current first-chord root is highlighted in the picker so the user can see where they are.
 
 ### Logic
+Transpose does two things in one action:
+1. Shifts all chord objects in the sequence (rootPc, pcs, name) by the offset.
+2. Calls `onTransposeKey(targetRootPc)` so App.jsx navigates to the matching key — this propagates the new root to the Circle, staff key signature, DiatonicChords grid, piano, KeyInfoBar, and RootPicker automatically via the existing key-selection flow.
+
 ```js
+// ProgressionBuilder.jsx
 function transposeSequence(targetRootPc) {
   const firstChord = sequence[0];
   if (!firstChord) return;
   const offset = (targetRootPc - firstChord.rootPc + 12) % 12;
-  if (offset === 0) return;
+  if (offset === 0) { setTransposeOpen(false); return; }
   setSequence(seq => seq.map(chord => {
     const newRoot = (chord.rootPc + offset) % 12;
-    // Preserve quality: strip old root name, reattach new one
     const oldRootName = pcToName(chord.rootPc, isFlat);
     const quality = chord.name.startsWith(oldRootName)
       ? chord.name.slice(oldRootName.length)
       : chord.name.replace(/^[A-G][#b]?/, '');
     return { ...chord, rootPc: newRoot, pcs: chord.pcs.map(pc => (pc + offset) % 12), name: pcToName(newRoot, isFlat) + quality };
   }));
+  onTransposeKey?.(targetRootPc);  // updates Circle, staff, piano, etc.
+  setTransposeOpen(false);
 }
 ```
 
-The root picker sits below the sequence area, above the movement suggestions panel. Label: `Transpose to`.
+```js
+// App.jsx — new handler passed as onTransposeKey prop
+function handleTransposeKey(targetRootPc) {
+  // Find a musicKeys entry matching rootPc + current mode (major/minor)
+  const type = scaleMode === 'minor' ? 'minor' : 'major';
+  const keyName =
+    Object.keys(musicKeys).find(k => musicKeys[k].rootPc === targetRootPc && musicKeys[k].type === type) ??
+    Object.keys(musicKeys).find(k => musicKeys[k].rootPc === targetRootPc);
+  if (keyName) handleKeySelect(keyName);
+}
+```
+
+`handleKeySelect` already triggers the rotation animation, resets chord selection, and updates all dependents — no extra wiring needed.
+```
 
 ---
 
@@ -172,7 +196,7 @@ playChordRef.current?.(chord.pcs, 4, 'block');
 
 | File | Changes |
 |---|---|
-| `App.jsx` | Responsive flex classes on main layout and left column |
+| `App.jsx` | Responsive flex classes on main layout and left column; `handleTransposeKey` handler; pass `onTransposeKey` prop to ProgressionBuilder |
 | `src/components/InstrumentPanel.jsx` | `overflow-x-auto` wrapper on instrument output |
 | `src/components/ProgressionBuilder.jsx` | Transpose UI + logic; SubMenu component + context menu state/handlers; metronome toggle state + wiring |
 | `src/hooks/useAudio.js` | Add `playClick()` function, expose on returned object |

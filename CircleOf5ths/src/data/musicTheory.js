@@ -478,15 +478,23 @@ export const CHORD_QUALITY_INTERVALS = [
   ['',       [0,4,7]         ],
 ];
 
-export function parseChord(name) {
-  if (!name) return null;
+export function parseChord(rawName) {
+  if (!rawName) return null;
+  // Normalize common AI-generated notations to canonical ASCII form
+  const name = rawName.trim()
+    .replace(/♭/g, 'b').replace(/♯/g, '#')   // Unicode accidentals → ASCII
+    .replace(/[△Δ]/g, 'maj')                   // △7, Δ7 → maj7
+    .replace(/\s*\(.*\)$/, '')                  // strip parenthetical "(...)"
+    .replace(/^([A-G][#b]?)min(?=\d|$)/, '$1m') // Amin7 → Am7
+    .replace(/^([A-G][#b]?)-(?=\d|$)/, '$1m')  // A-7 → Am7
+    .replace(/^([A-G][#b]?)M(\d)/, '$1maj$2'); // AM7 → Amaj7
   const m = name.match(/^([A-G][#b]?)/);
   if (!m) return null;
   const rootPc = noteToPc(m[1]);
   if (rootPc == null) return null;
   const rest = name.slice(m[1].length);
   for (const [suffix, intervals] of CHORD_QUALITY_INTERVALS) {
-    if (rest === suffix) return { rootPc, pcs: intervals.map(n => (rootPc + n) % 12), name };
+    if (rest === suffix) return { rootPc, pcs: intervals.map(n => (rootPc + n) % 12), name: rawName };
   }
-  return { rootPc, pcs: [0, 4, 7].map(n => (rootPc + n) % 12), name };
+  return { rootPc, pcs: [0, 4, 7].map(n => (rootPc + n) % 12), name: rawName };
 }
