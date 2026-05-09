@@ -224,17 +224,19 @@ export default function InstrumentPanel({
         </div>
       </div>
 
-      {/* Tuning row — visible only when active instrument has multiple tunings */}
-      {showTuningRow && (
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-[10px] text-white/25">Tuning:</span>
-          <TuningDropdown
-            tunings={inst.tunings}
-            value={tuningValue}
-            onChange={tuningOnChange}
-          />
-        </div>
-      )}
+      {/* Tuning row — space always reserved so all instruments stay the same height */}
+      <div className="flex items-center gap-2 mb-3" style={{ minHeight: '26px' }}>
+        {showTuningRow && (
+          <>
+            <span className="text-[10px] text-white/25">Tuning:</span>
+            <TuningDropdown
+              tunings={inst.tunings}
+              value={tuningValue}
+              onChange={tuningOnChange}
+            />
+          </>
+        )}
+      </div>
 
       {/* Instrument view */}
       <div className="overflow-x-auto">
