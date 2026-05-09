@@ -1,7 +1,8 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { NOTE_COLORS, pcToName, SCALES } from '../data/musicTheory.js';
+import { INSTRUMENTS } from '../data/instruments.js';
 import Piano from './Piano.jsx';
-import GuitarFretboard from './GuitarFretboard.jsx';
+import FretboardInstrument from './FretboardInstrument.jsx';
 
 const SCALE_OPTIONS = Object.entries(SCALES).map(([key, s]) => ({ key, label: s.label }));
 
@@ -53,6 +54,47 @@ function ScaleDropdown({ value, onChange }) {
   );
 }
 
+function TuningDropdown({ tunings, value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const options = Object.entries(tunings);
+  const active = tunings[value];
+
+  useEffect(() => {
+    if (!open) return;
+    function handle(e) { if (!ref.current?.contains(e.target)) setOpen(false); }
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all"
+        style={{ background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.4)', color: 'rgba(196,181,253,0.9)' }}>
+        {active?.label ?? value}
+        <span className="text-[8px] opacity-60">{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div
+          className="absolute top-full left-0 mt-1 z-50 rounded-xl overflow-hidden py-1"
+          style={{ background: 'rgba(24,24,40,0.97)', border: '1px solid rgba(255,255,255,0.12)', minWidth: '14rem', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+          {options.map(([key, { label }]) => (
+            <button
+              key={key}
+              onClick={() => { onChange(key); setOpen(false); }}
+              className="w-full text-left px-3 py-1.5 text-[11px] transition-colors hover:bg-white/10"
+              style={{ color: value === key ? 'rgba(196,181,253,0.95)' : 'rgba(255,255,255,0.55)', fontWeight: value === key ? 700 : 400, background: value === key ? 'rgba(167,139,250,0.1)' : 'transparent' }}>
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function InstrumentPanel({
   currentKeyInfo,
   activeScalePcs,
@@ -67,11 +109,28 @@ export default function InstrumentPanel({
   const { playScale, playChord, stop, isPlaying, isLoading, activePc } = audio;
   const [showColorNotes, setShowColorNotes] = useState(true);
   const [compareMode,    setCompareMode]    = useState(null);
+  const [guitarTuning,   setGuitarTuning]   = useState(
+    () => localStorage.getItem('co5_guitar_tuning') || 'standard'
+  );
+  const [ukuleleTuning,  setUkuleleTuning]  = useState(
+    () => localStorage.getItem('co5_ukulele_tuning') || 'standard'
+  );
+
+  useEffect(() => { localStorage.setItem('co5_guitar_tuning',  guitarTuning);  }, [guitarTuning]);
+  useEffect(() => { localStorage.setItem('co5_ukulele_tuning', ukuleleTuning); }, [ukuleleTuning]);
+
+  const activeTuning = useMemo(() => {
+    const inst = INSTRUMENTS[instrumentMode];
+    if (!inst?.tunings) return null;
+    const key = instrumentMode === 'guitar'  ? guitarTuning
+              : instrumentMode === 'ukulele' ? ukuleleTuning
+              : inst.defaultTuning;
+    return inst.tunings[key] ?? inst.tunings[inst.defaultTuning];
+  }, [instrumentMode, guitarTuning, ukuleleTuning]);
 
   const hasColorNotes  = colorNotePcs?.size > 0;
   const colorPcs       = showColorNotes && hasColorNotes && !activeChordPcs ? colorNotePcs : null;
 
-  // Pitch classes of the comparison scale, relative to the same root
   const compareScalePcs = useMemo(() => {
     if (!compareMode) return null;
     const intervals = SCALES[compareMode]?.intervals;
@@ -92,6 +151,17 @@ export default function InstrumentPanel({
     }
   }
 
+  const inst = INSTRUMENTS[instrumentMode];
+  const showTuningRow = inst?.tunings && Object.keys(inst.tunings).length > 1;
+  const tuningValue    = instrumentMode === 'guitar' ? guitarTuning : ukuleleTuning;
+  const tuningOnChange = instrumentMode === 'guitar' ? setGuitarTuning : setUkuleleTuning;
+
+  const fretboardLabel = inst && activeTuning
+    ? `${inst.label} · ${activeTuning.label} · ${activeChordPcs ? (activeChordRoot !== undefined ? pcToName(activeChordRoot, isFlat) + ' chord' : 'chord') : scaleLabel}`
+    : inst
+    ? `${inst.label} · ${activeChordPcs ? (activeChordRoot !== undefined ? pcToName(activeChordRoot, isFlat) + ' chord' : 'chord') : scaleLabel}`
+    : '';
+
   return (
     <div className="rounded-2xl px-5 py-4"
       style={{ background: 'rgba(255,255,255,0.045)', border: '1px solid rgba(255,255,255,0.09)' }}>
@@ -102,7 +172,7 @@ export default function InstrumentPanel({
           <span className="text-[10px] font-bold tracking-[2px] text-white/25 uppercase">Instrument View</span>
           {/* Notes / Intervals toggle */}
           <div className="flex bg-white/[0.06] rounded-lg p-0.5 gap-0.5">
-            {['notes','intervals'].map(m => (
+            {['notes', 'intervals'].map(m => (
               <button key={m}
                 onClick={() => onLabelModeChange(m)}
                 className="px-3 py-1 rounded-md text-[11px] font-semibold capitalize transition-colors"
@@ -130,20 +200,32 @@ export default function InstrumentPanel({
           </div>
         </div>
 
-        {/* Piano / Guitar toggle */}
+        {/* Instrument toggle — 4 buttons built from INSTRUMENTS data */}
         <div className="flex bg-white/[0.06] rounded-lg p-0.5 gap-0.5">
-          {[['piano','🎹 Piano'],['guitar','🎸 Guitar']].map(([mode, label]) => (
-            <button key={mode}
-              onClick={() => onInstrumentModeChange(mode)}
+          {Object.entries(INSTRUMENTS).map(([id, { label, emoji }]) => (
+            <button key={id}
+              onClick={() => onInstrumentModeChange(id)}
               className="px-4 py-1.5 rounded-md text-[11px] font-semibold transition-colors"
-              style={instrumentMode === mode
+              style={instrumentMode === id
                 ? { background: 'linear-gradient(135deg,#a78bfa,#60a5fa)', color: 'white' }
                 : { color: 'rgba(255,255,255,0.38)' }}>
-              {label}
+              {emoji} {label}
             </button>
           ))}
         </div>
       </div>
+
+      {/* Tuning row — visible only when active instrument has multiple tunings */}
+      {showTuningRow && (
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-[10px] text-white/25">Tuning:</span>
+          <TuningDropdown
+            tunings={inst.tunings}
+            value={tuningValue}
+            onChange={tuningOnChange}
+          />
+        </div>
+      )}
 
       {/* Instrument view */}
       <div className="overflow-x-auto">
@@ -164,9 +246,14 @@ export default function InstrumentPanel({
           ) : (
             <div className="mt-1 mb-1">
               <p className="text-[10px] font-bold tracking-[2px] text-white/25 uppercase mb-3">
-                Guitar · {activeChordPcs ? (activeChordRoot !== undefined ? pcToName(activeChordRoot, isFlat) + ' chord' : 'chord') : scaleLabel}
+                {fretboardLabel}
               </p>
-              <GuitarFretboard
+              <FretboardInstrument
+                openPcs={activeTuning.openPcs}
+                stringLabels={activeTuning.labels}
+                stringWidths={inst.stringWidths}
+                fretCount={inst.fretCount}
+                fretMarkers={inst.fretMarkers}
                 activeScalePcs={activeScalePcs}
                 activeChordPcs={activeChordPcs}
                 activeChordRoot={activeChordRoot}
@@ -197,7 +284,7 @@ export default function InstrumentPanel({
         </span>
         <div className="flex gap-1.5 flex-wrap">
           {chips.map(({ pc, label: chipLabel }, i) => {
-            const color = NOTE_COLORS[pc];
+            const color  = NOTE_COLORS[pc];
             const isRoot = activeChordPcs ? pc === activeChordRoot : pc === rootPc;
             return (
               <button
@@ -205,7 +292,7 @@ export default function InstrumentPanel({
                 onClick={() => !isPlaying && playChord([pc], 4, 'block')}
                 className="text-[11px] font-bold rounded-lg px-2 py-1 border transition-opacity hover:opacity-80"
                 style={{
-                  background: isRoot ? `${color}45` : `${color}18`,
+                  background:  isRoot ? `${color}45` : `${color}18`,
                   borderColor: `${color}50`,
                   color,
                 }}>
