@@ -219,6 +219,24 @@ export default function InstrumentPanel({
       </div>
 
       {/* Instrument view */}
+      {instrumentMode !== 'piano' && (
+        <div className="flex items-center gap-1.5 flex-wrap mb-3">
+          <span className="text-[10px] font-bold tracking-[2px] text-white/25 uppercase">{inst.label}</span>
+          {activeTuning && (
+            <>
+              <span className="text-[10px] font-bold text-white/15">·</span>
+              {showTuningRow
+                ? <TuningDropdown tunings={inst.tunings} value={tuningValue} onChange={tuningOnChange} />
+                : <span className="text-[10px] font-bold tracking-[2px] text-white/25 uppercase">{activeTuning.label}</span>
+              }
+            </>
+          )}
+          <span className="text-[10px] font-bold text-white/15">·</span>
+          <span className="text-[10px] font-bold tracking-[2px] text-white/25 uppercase">
+            {activeChordPcs ? (activeChordRoot !== undefined ? pcToName(activeChordRoot, isFlat) + ' chord' : 'chord') : scaleLabel}
+          </span>
+        </div>
+      )}
       <div className="overflow-x-auto">
         <div className="min-w-[540px]">
           {instrumentMode === 'piano' ? (
@@ -235,40 +253,22 @@ export default function InstrumentPanel({
               compareScalePcs={compareScalePcs}
             />
           ) : (
-            <div className="mt-1 mb-1">
-              <div className="flex items-center gap-1.5 flex-wrap mb-3">
-                <span className="text-[10px] font-bold tracking-[2px] text-white/25 uppercase">{inst.label}</span>
-                {activeTuning && (
-                  <>
-                    <span className="text-[10px] font-bold text-white/15">·</span>
-                    {showTuningRow
-                      ? <TuningDropdown tunings={inst.tunings} value={tuningValue} onChange={tuningOnChange} />
-                      : <span className="text-[10px] font-bold tracking-[2px] text-white/25 uppercase">{activeTuning.label}</span>
-                    }
-                  </>
-                )}
-                <span className="text-[10px] font-bold text-white/15">·</span>
-                <span className="text-[10px] font-bold tracking-[2px] text-white/25 uppercase">
-                  {activeChordPcs ? (activeChordRoot !== undefined ? pcToName(activeChordRoot, isFlat) + ' chord' : 'chord') : scaleLabel}
-                </span>
-              </div>
-              <FretboardInstrument
-                openPcs={activeTuning.openPcs}
-                stringLabels={activeTuning.labels}
-                stringWidths={activeTuning.stringWidths ?? inst.stringWidths}
-                fretCount={inst.fretCount}
-                fretMarkers={inst.fretMarkers}
-                activeScalePcs={activeScalePcs}
-                activeChordPcs={activeChordPcs}
-                activeChordRoot={activeChordRoot}
-                rootPc={rootPc}
-                labelMode={labelMode}
-                isFlat={isFlat}
-                colorPcs={colorPcs}
-                activePc={activePc}
-                compareScalePcs={compareScalePcs}
-              />
-            </div>
+            <FretboardInstrument
+              openPcs={activeTuning.openPcs}
+              stringLabels={activeTuning.labels}
+              stringWidths={activeTuning.stringWidths ?? inst.stringWidths}
+              fretCount={inst.fretCount}
+              fretMarkers={inst.fretMarkers}
+              activeScalePcs={activeScalePcs}
+              activeChordPcs={activeChordPcs}
+              activeChordRoot={activeChordRoot}
+              rootPc={rootPc}
+              labelMode={labelMode}
+              isFlat={isFlat}
+              colorPcs={colorPcs}
+              activePc={activePc}
+              compareScalePcs={compareScalePcs}
+            />
           )}
         </div>
       </div>
