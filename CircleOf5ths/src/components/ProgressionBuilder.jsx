@@ -591,44 +591,6 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
     );
   }
 
-  function SubMenu() {
-    if (!subMenu) return null;
-    const chord = sequence.find(c => c.id === subMenu.chordId);
-    if (!chord) return null;
-    const subs = computeSubstitutions(chord);
-    const left = Math.min(subMenu.x, window.innerWidth - 240);
-    return (
-      <div
-        onClick={e => e.stopPropagation()}
-        style={{ position: 'fixed', top: subMenu.y, left, zIndex: 50, maxWidth: 220,
-          background: 'rgba(20,20,35,0.97)', border: '1px solid rgba(255,255,255,0.12)',
-          borderRadius: 12, padding: '8px 8px 4px', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
-        <p className="text-[8px] font-bold tracking-[2px] uppercase text-white/20 mb-2 px-1">{chord.name}</p>
-        <div className="flex flex-wrap gap-1 mb-2">
-          {subs.map((sub, i) => {
-            const color = NOTE_COLORS[sub.rootPc];
-            return (
-              <button
-                key={i}
-                onClick={() => replaceChord(chord.id, sub)}
-                className="flex flex-col items-center px-2 py-1 rounded-lg border text-left transition-all hover:opacity-80"
-                style={{ background: `${color}14`, borderColor: `${color}35` }}>
-                <span className="text-[8px] font-bold text-white/30 leading-none mb-0.5">{sub.label}</span>
-                <span className="text-[11px] font-bold leading-none" style={{ color }}>{sub.name}</span>
-              </button>
-            );
-          })}
-        </div>
-        <button
-          onClick={() => { removeChord(chord.id); setSubMenu(null); }}
-          className="w-full text-[10px] font-semibold py-1 rounded-lg transition-colors hover:bg-white/10"
-          style={{ color: 'rgba(239,68,68,0.7)', border: '1px solid rgba(239,68,68,0.2)' }}>
-          ✕ Remove
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className="rounded-2xl px-5 py-4"
       style={{ background: 'rgba(255,255,255,0.045)', border: '1px solid rgba(255,255,255,0.09)' }}>
@@ -840,7 +802,7 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
                 )}
                 <div
                   draggable
-                  onDragStart={e => startChipDrag(e, idx)}
+                  onDragStart={e => { clearTimeout(longPressRef.current); longPressRef.current = null; startChipDrag(e, idx); }}
                   onDragEnd={endDrag}
                   onContextMenu={e => { e.preventDefault(); setSubMenu({ chordId: chord.id, x: e.clientX, y: e.clientY }); }}
                   onPointerDown={e => {
@@ -851,6 +813,7 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
                   }}
                   onPointerUp={() => { clearTimeout(longPressRef.current); longPressRef.current = null; }}
                   onPointerMove={() => { clearTimeout(longPressRef.current); longPressRef.current = null; }}
+                  onPointerCancel={() => { clearTimeout(longPressRef.current); longPressRef.current = null; }}
                   className="flex items-center gap-1 px-2 py-1 rounded-lg border text-[11px] font-bold select-none transition-all"
                   style={{
                     background: isActive ? `${color}30` : `${color}14`,
@@ -1072,7 +1035,43 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
           </div>
         )}
       </div>
-      <SubMenu />
+      {subMenu && (() => {
+        const chord = sequence.find(c => c.id === subMenu.chordId);
+        if (!chord) return null;
+        const subs = computeSubstitutions(chord);
+        const left = Math.min(subMenu.x, window.innerWidth - 240);
+        const top  = Math.min(subMenu.y, window.innerHeight - 180);
+        return (
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ position: 'fixed', top, left, zIndex: 50, maxWidth: 220,
+              background: 'rgba(20,20,35,0.97)', border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: 12, padding: '8px 8px 4px', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+            <p className="text-[8px] font-bold tracking-[2px] uppercase text-white/20 mb-2 px-1">{chord.name}</p>
+            <div className="flex flex-wrap gap-1 mb-2">
+              {subs.map((sub) => {
+                const color = NOTE_COLORS[sub.rootPc];
+                return (
+                  <button
+                    key={sub.label}
+                    onClick={() => replaceChord(chord.id, sub)}
+                    className="flex flex-col items-center px-2 py-1 rounded-lg border text-left transition-all hover:opacity-80"
+                    style={{ background: `${color}14`, borderColor: `${color}35` }}>
+                    <span className="text-[8px] font-bold text-white/30 leading-none mb-0.5">{sub.label}</span>
+                    <span className="text-[11px] font-bold leading-none" style={{ color }}>{sub.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => { removeChord(chord.id); setSubMenu(null); }}
+              className="w-full text-[10px] font-semibold py-1 rounded-lg transition-colors hover:bg-white/10"
+              style={{ color: 'rgba(239,68,68,0.7)', border: '1px solid rgba(239,68,68,0.2)' }}>
+              ✕ Remove
+            </button>
+          </div>
+        );
+      })()}
     </div>
   );
 });
