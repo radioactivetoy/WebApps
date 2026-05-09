@@ -159,5 +159,17 @@ export function useAudio() {
     }
   }
 
-  return { playScale, playChord, stop, isPlaying, isLoading, activePc };
+  function playClick() {
+    Tone.start().then(() => {
+      const synth = new Tone.MembraneSynth({
+        pitchDecay: 0.008,
+        octaves: 2,
+        envelope: { attack: 0.001, decay: 0.08, sustain: 0, release: 0.1 },
+      }).toDestination();
+      synth.triggerAttackRelease('C2', '8n');
+      setTimeout(() => synth.dispose(), 500);
+    });
+  }
+
+  return { playScale, playChord, playClick, stop, isPlaying, isLoading, activePc };
 }

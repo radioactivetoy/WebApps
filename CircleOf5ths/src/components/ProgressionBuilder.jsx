@@ -260,12 +260,13 @@ function loadSaved() {
 
 const ProgressionBuilder = forwardRef(function ProgressionBuilder({
   activeScalePcs, scaleMode, rootPc, isFlat,
-  playChord, onHighlightChord, onSequenceChange,
+  playChord, playClick, onHighlightChord, onSequenceChange,
 }, ref) {
   const [sequence, setSequence] = useState([]);
   const [playing,  setPlaying]  = useState(null);
   const [bpm,      setBpm]      = useState(80);
   const [loop,     setLoop]     = useState(true);
+  const [metronome, setMetronome] = useState(false);
   const [saveName, setSaveName] = useState('');
   const [saved,    setSaved]    = useState(loadSaved);
 
@@ -288,6 +289,8 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
   sequenceRef.current  = sequence;
   const playChordRef   = useRef(playChord);
   playChordRef.current = playChord;
+  const playClickRef   = useRef(playClick);
+  playClickRef.current = playClick;
   const highlightRef   = useRef(onHighlightChord);
   highlightRef.current = onHighlightChord;
 
@@ -355,6 +358,7 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
     const seq = sequenceRef.current;
     if (!seq.length) return;
     const chord = seq[playing.step % seq.length];
+    if (metronome) playClickRef.current?.();
     highlightRef.current?.({ pcs: chord.pcs, rootPc: chord.rootPc, name: chord.name });
     playChordRef.current?.(chord.pcs, 4, 'block');
     const timer = setTimeout(() => {
@@ -370,7 +374,7 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
       });
     }, stepMs);
     return () => clearTimeout(timer);
-  }, [playing, stepMs, loop]);
+  }, [playing, stepMs, loop, metronome]);
 
   useEffect(() => { if (sequence.length === 0) setPlaying(null); }, [sequence.length]);
   useEffect(() => { onSequenceChange?.(sequence); }, [sequence, onSequenceChange]);
@@ -535,6 +539,15 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
               : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)' }}>
             ↺ Loop
           </button>
+          <button
+            onClick={() => setMetronome(v => !v)}
+            title="Metronome click on each chord"
+            className="px-2 py-0.5 rounded-md text-[10px] font-semibold transition-all"
+            style={metronome
+              ? { background: 'rgba(167,139,250,0.2)', border: '1px solid rgba(167,139,250,0.4)', color: 'rgba(167,139,250,0.9)' }
+              : { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.3)' }}>
+            🥁
+          </button>
         </div>
       </div>
 
@@ -601,10 +614,10 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
         if (!customOpen) return (
           <button
             onClick={() => setCustomOpen(true)}
-            className="mb-3 w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-left transition-colors hover:bg-white/5"
-            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-            <span className="text-[8px] font-bold tracking-[2px] uppercase text-white/20">Custom chord</span>
-            <span className="text-white/20 text-[10px]">▼</span>
+            className="mb-3 w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-left transition-colors hover:bg-white/[0.07]"
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)' }}>
+            <span className="text-[10px] font-semibold text-white/45">+ Custom chord</span>
+            <span className="text-white/30 text-[10px]">▼</span>
           </button>
         );
         const CHROMATIC = isFlat

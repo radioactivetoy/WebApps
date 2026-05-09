@@ -250,6 +250,7 @@ export default function App() {
                 rootPc={currentKeyInfo.rootPc}
                 isFlat={isFlat}
                 playChord={audio.playChord}
+                playClick={audio.playClick}
                 onHighlightChord={handleHighlightChord}
                 onSequenceChange={setProgressionSequence}
               />
