@@ -6,8 +6,9 @@ const OPEN_W = 40;
 const NUT_X = LABEL_W + OPEN_W;           // 64
 const MARGIN_R = 6;
 const FRET_AREA_W = VB_W - NUT_X - MARGIN_R; // 930
+const VB_H = 185;
 const MT = 18, MB = 30;
-const SS = 27.4;                           // fixed string spacing in viewbox units
+const STRINGS_H = VB_H - MT - MB;         // 137 — fixed regardless of string count
 const DOT_R = 10;
 const OPEN_X = LABEL_W + OPEN_W / 2;      // 44
 
@@ -17,8 +18,7 @@ export default function FretboardInstrument({
   rootPc, labelMode, isFlat, colorPcs, activePc, compareScalePcs,
 }) {
   const numStrings = openPcs.length;
-  const STRINGS_H = (numStrings - 1) * SS;
-  const VB_H = STRINGS_H + MT + MB;
+  const SS = STRINGS_H / (numStrings - 1); // spreads strings to fill fixed height
   const FRET_W = FRET_AREA_W / fretCount;
   const midY = MT + STRINGS_H / 2;
 
