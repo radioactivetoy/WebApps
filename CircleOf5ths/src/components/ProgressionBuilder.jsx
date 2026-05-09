@@ -294,6 +294,8 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
   playChordRef.current = playChord;
   const playClickRef   = useRef(playClick);
   playClickRef.current = playClick;
+  const metronomeRef   = useRef(metronome);
+  metronomeRef.current = metronome;
   const highlightRef   = useRef(onHighlightChord);
   highlightRef.current = onHighlightChord;
 
@@ -361,7 +363,7 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
     const seq = sequenceRef.current;
     if (!seq.length) return;
     const chord = seq[playing.step % seq.length];
-    if (metronome) playClickRef.current?.();
+    if (metronomeRef.current) playClickRef.current?.();
     highlightRef.current?.({ pcs: chord.pcs, rootPc: chord.rootPc, name: chord.name });
     playChordRef.current?.(chord.pcs, 4, 'block');
     const timer = setTimeout(() => {
@@ -377,7 +379,7 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
       });
     }, stepMs);
     return () => clearTimeout(timer);
-  }, [playing, stepMs, loop, metronome]);
+  }, [playing, stepMs, loop]);
 
   useEffect(() => { if (sequence.length === 0) setPlaying(null); }, [sequence.length]);
   useEffect(() => { onSequenceChange?.(sequence); }, [sequence, onSequenceChange]);
