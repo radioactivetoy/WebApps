@@ -190,7 +190,7 @@ export default function DiatonicChords({
                   onClick={() => onChordVariantChange(val)}
                   className="px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors"
                   style={chordVariant === val
-                    ? { background: `${selectedTriad?.color ?? 'rgba(167,139,250,0.3)'}`, border: `1px solid ${selectedTriad?.color ?? 'rgba(167,139,250,0.6)'}`, color: selectedTriad?.color ?? '#c4b5fd' }
+                    ? { background: `${selectedTriad?.color ?? '#a78bfa'}25`, border: `1px solid ${selectedTriad?.color ?? '#a78bfa'}70`, color: selectedTriad?.color ?? '#c4b5fd' }
                     : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)' }}>
                   {label}
                 </button>
