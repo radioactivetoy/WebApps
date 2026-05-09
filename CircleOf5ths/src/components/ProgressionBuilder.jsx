@@ -260,7 +260,7 @@ function loadSaved() {
 
 const ProgressionBuilder = forwardRef(function ProgressionBuilder({
   activeScalePcs, scaleMode, rootPc, isFlat,
-  playChord, playClick, onHighlightChord, onSequenceChange,
+  playChord, playClick, onHighlightChord, onSequenceChange, onTransposeKey,
 }, ref) {
   const [sequence, setSequence] = useState([]);
   const [playing,  setPlaying]  = useState(null);
@@ -275,6 +275,7 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
   const [customRoot,     setCustomRoot]     = useState(0);
   const [customQuality,  setCustomQuality]  = useState('');
   const [customOpen,     setCustomOpen]     = useState(false);
+  const [transposeOpen,  setTransposeOpen]  = useState(false);
 
   // Drag-and-drop state
   // dragSource: { type: 'palette', chord } | { type: 'sequence', idx } | null
@@ -379,6 +380,13 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
   useEffect(() => { if (sequence.length === 0) setPlaying(null); }, [sequence.length]);
   useEffect(() => { onSequenceChange?.(sequence); }, [sequence, onSequenceChange]);
 
+  useEffect(() => {
+    if (!transposeOpen) return;
+    function close() { setTransposeOpen(false); }
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [transposeOpen]);
+
   useImperativeHandle(ref, () => ({
     addChord: (chord) => setSequence(s => [...s, { ...chord, id: uid() }]),
   }));
@@ -405,6 +413,23 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
   function togglePlay() {
     if (playing) { setPlaying(null); highlightRef.current?.(null); }
     else if (sequence.length) setPlaying({ step: 0 });
+  }
+
+  function transposeSequence(targetRootPc) {
+    const firstChord = sequence[0];
+    if (!firstChord) return;
+    const offset = (targetRootPc - firstChord.rootPc + 12) % 12;
+    if (offset === 0) { setTransposeOpen(false); return; }
+    setSequence(seq => seq.map(chord => {
+      const newRoot = (chord.rootPc + offset) % 12;
+      const oldRootName = pcToName(chord.rootPc, isFlat);
+      const quality = chord.name.startsWith(oldRootName)
+        ? chord.name.slice(oldRootName.length)
+        : chord.name.replace(/^[A-G][#b]?/, '');
+      return { ...chord, rootPc: newRoot, pcs: chord.pcs.map(pc => (pc + offset) % 12), name: pcToName(newRoot, isFlat) + quality };
+    }));
+    onTransposeKey?.(targetRootPc);
+    setTransposeOpen(false);
   }
 
   // ── Drag-and-drop handlers ──────────────────────────────────────────────────
@@ -870,6 +895,44 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
           title="Copy progression as text">
           Copy
         </button>
+
+        {sequence.length > 0 && (
+          <div className="relative">
+            <button
+              onClick={e => { e.stopPropagation(); setTransposeOpen(v => !v); }}
+              className="px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-opacity hover:opacity-80"
+              style={transposeOpen
+                ? { background: 'rgba(167,139,250,0.2)', border: '1px solid rgba(167,139,250,0.4)', color: 'rgba(167,139,250,0.9)' }
+                : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)' }}>
+              ⇅ Transpose
+            </button>
+            {transposeOpen && (
+              <div
+                onClick={e => e.stopPropagation()}
+                className="absolute right-0 top-full mt-1 z-40 rounded-xl p-2"
+                style={{ background: 'rgba(20,20,35,0.97)', border: '1px solid rgba(167,139,250,0.25)', minWidth: 180, boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+                <p className="text-[8px] font-bold tracking-[2px] uppercase text-white/20 mb-2 px-1">Transpose to root</p>
+                <div className="grid grid-cols-6 gap-1">
+                  {Array.from({ length: 12 }, (_, pc) => {
+                    const name = pcToName(pc, isFlat);
+                    const isCurrent = sequence[0]?.rootPc === pc;
+                    return (
+                      <button
+                        key={pc}
+                        onClick={() => transposeSequence(pc)}
+                        className="py-1 rounded-lg text-[10px] font-bold transition-all hover:opacity-80"
+                        style={isCurrent
+                          ? { background: 'rgba(167,139,250,0.3)', border: '1px solid rgba(167,139,250,0.6)', color: '#c4b5fd' }
+                          : { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.55)' }}>
+                        {name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── Save / load ── */}

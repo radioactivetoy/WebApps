@@ -171,6 +171,14 @@ export default function App() {
     }
   }
 
+  function handleTransposeKey(targetRootPc) {
+    const type = scaleMode === 'minor' ? 'minor' : 'major';
+    const keyName =
+      Object.keys(musicKeys).find(k => musicKeys[k].rootPc === targetRootPc && musicKeys[k].type === type) ??
+      Object.keys(musicKeys).find(k => musicKeys[k].rootPc === targetRootPc);
+    if (keyName) handleKeySelect(keyName);
+  }
+
   return (
     <div className="min-h-screen font-sans text-white" style={{ background: 'var(--bg-gradient)' }}>
       <Header />
@@ -253,6 +261,7 @@ export default function App() {
                 playClick={audio.playClick}
                 onHighlightChord={handleHighlightChord}
                 onSequenceChange={setProgressionSequence}
+                onTransposeKey={handleTransposeKey}
               />
             </CollapsiblePanel>
             <CollapsiblePanel title="Common Progressions" defaultOpen={false}>
