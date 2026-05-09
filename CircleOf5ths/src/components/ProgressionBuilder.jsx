@@ -276,6 +276,8 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
   const [customQuality,  setCustomQuality]  = useState('');
   const [customOpen,     setCustomOpen]     = useState(false);
   const [transposeOpen,  setTransposeOpen]  = useState(false);
+  const [subMenu, setSubMenu] = useState(null); // null | { chordId, x, y }
+  const longPressRef = useRef(null);
 
   // Drag-and-drop state
   // dragSource: { type: 'palette', chord } | { type: 'sequence', idx } | null
@@ -387,6 +389,13 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
     return () => document.removeEventListener('click', close);
   }, [transposeOpen]);
 
+  useEffect(() => {
+    if (!subMenu) return;
+    function dismiss() { setSubMenu(null); }
+    document.addEventListener('click', dismiss);
+    return () => document.removeEventListener('click', dismiss);
+  }, [subMenu]);
+
   useImperativeHandle(ref, () => ({
     addChord: (chord) => setSequence(s => [...s, { ...chord, id: uid() }]),
   }));
@@ -433,6 +442,41 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
     }));
     onTransposeKey?.(targetRootPc);
     setTransposeOpen(false);
+  }
+
+  function computeSubstitutions(chord) {
+    const { rootPc: r, pcs } = chord;
+    const q = triadQuality(pcs);
+    const subs = [];
+
+    const triR = (r + 6) % 12;
+    subs.push({ label: 'Tritone', rootPc: triR, pcs: [0,4,7,10].map(n=>(triR+n)%12), name: pcToName(triR, isFlat)+'7' });
+
+    if (q === 'major') {
+      const relR = (r + 9) % 12;
+      subs.push({ label: 'Relative', rootPc: relR, pcs: [0,3,7].map(n=>(relR+n)%12), name: pcToName(relR, isFlat)+'m' });
+    } else if (q === 'minor') {
+      const relR = (r + 3) % 12;
+      subs.push({ label: 'Relative', rootPc: relR, pcs: [0,4,7].map(n=>(relR+n)%12), name: pcToName(relR, isFlat) });
+    }
+
+    if (q === 'major') {
+      subs.push({ label: 'Parallel', rootPc: r, pcs: [0,3,7].map(n=>(r+n)%12), name: pcToName(r, isFlat)+'m' });
+    } else if (q === 'minor') {
+      subs.push({ label: 'Parallel', rootPc: r, pcs: [0,4,7].map(n=>(r+n)%12), name: pcToName(r, isFlat) });
+    }
+
+    const bVIr = (r + 8) % 12;
+    subs.push({ label: 'bVI', rootPc: bVIr, pcs: [0,4,7].map(n=>(bVIr+n)%12), name: pcToName(bVIr, isFlat) });
+
+    subs.push({ label: 'Sus4', rootPc: r, pcs: [0,5,7].map(n=>(r+n)%12), name: pcToName(r, isFlat)+'sus4' });
+
+    return subs;
+  }
+
+  function replaceChord(id, newChord) {
+    setSequence(s => s.map(c => c.id === id ? { ...newChord, id } : c));
+    setSubMenu(null);
   }
 
   // ── Drag-and-drop handlers ──────────────────────────────────────────────────
@@ -543,6 +587,44 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
         style={{ width: isTarget ? 18 : (isDragging ? 6 : 2), minHeight: 32 }}>
         <div className="w-full h-full rounded-sm transition-all"
           style={{ background: isTarget ? 'rgba(167,139,250,0.6)' : isDragging ? 'rgba(255,255,255,0.06)' : 'transparent' }} />
+      </div>
+    );
+  }
+
+  function SubMenu() {
+    if (!subMenu) return null;
+    const chord = sequence.find(c => c.id === subMenu.chordId);
+    if (!chord) return null;
+    const subs = computeSubstitutions(chord);
+    const left = Math.min(subMenu.x, window.innerWidth - 240);
+    return (
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{ position: 'fixed', top: subMenu.y, left, zIndex: 50, maxWidth: 220,
+          background: 'rgba(20,20,35,0.97)', border: '1px solid rgba(255,255,255,0.12)',
+          borderRadius: 12, padding: '8px 8px 4px', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+        <p className="text-[8px] font-bold tracking-[2px] uppercase text-white/20 mb-2 px-1">{chord.name}</p>
+        <div className="flex flex-wrap gap-1 mb-2">
+          {subs.map((sub, i) => {
+            const color = NOTE_COLORS[sub.rootPc];
+            return (
+              <button
+                key={i}
+                onClick={() => replaceChord(chord.id, sub)}
+                className="flex flex-col items-center px-2 py-1 rounded-lg border text-left transition-all hover:opacity-80"
+                style={{ background: `${color}14`, borderColor: `${color}35` }}>
+                <span className="text-[8px] font-bold text-white/30 leading-none mb-0.5">{sub.label}</span>
+                <span className="text-[11px] font-bold leading-none" style={{ color }}>{sub.name}</span>
+              </button>
+            );
+          })}
+        </div>
+        <button
+          onClick={() => { removeChord(chord.id); setSubMenu(null); }}
+          className="w-full text-[10px] font-semibold py-1 rounded-lg transition-colors hover:bg-white/10"
+          style={{ color: 'rgba(239,68,68,0.7)', border: '1px solid rgba(239,68,68,0.2)' }}>
+          ✕ Remove
+        </button>
       </div>
     );
   }
@@ -760,6 +842,15 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
                   draggable
                   onDragStart={e => startChipDrag(e, idx)}
                   onDragEnd={endDrag}
+                  onContextMenu={e => { e.preventDefault(); setSubMenu({ chordId: chord.id, x: e.clientX, y: e.clientY }); }}
+                  onPointerDown={e => {
+                    longPressRef.current = setTimeout(() => {
+                      longPressRef.current = null;
+                      setSubMenu({ chordId: chord.id, x: e.clientX, y: e.clientY });
+                    }, 500);
+                  }}
+                  onPointerUp={() => { clearTimeout(longPressRef.current); longPressRef.current = null; }}
+                  onPointerMove={() => { clearTimeout(longPressRef.current); longPressRef.current = null; }}
                   className="flex items-center gap-1 px-2 py-1 rounded-lg border text-[11px] font-bold select-none transition-all"
                   style={{
                     background: isActive ? `${color}30` : `${color}14`,
@@ -981,6 +1072,7 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
           </div>
         )}
       </div>
+      <SubMenu />
     </div>
   );
 });
