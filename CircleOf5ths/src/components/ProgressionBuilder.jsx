@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, forwardRef, useImperativeHandle } from 'react';
-import { NOTE_COLORS, buildDiatonicChords, pcToName,
+import { NOTE_COLORS, buildDiatonicChords, pcToName, musicKeys,
   majorHarmonicFn, minorHarmonicFn, HARMONIC_FN_COLORS } from '../data/musicTheory.js';
 
 const PARALLEL_INTERVALS = {
@@ -408,6 +408,7 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
     setPlaying(null);
     highlightRef.current?.(null);
     setSequence([]);
+    setTransposeOpen(false);
   }
 
   function togglePlay() {
@@ -420,13 +421,15 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
     if (!firstChord) return;
     const offset = (targetRootPc - firstChord.rootPc + 12) % 12;
     if (offset === 0) { setTransposeOpen(false); return; }
+    const type = scaleMode === 'minor' ? 'minor' : 'major';
+    const targetKey =
+      Object.values(musicKeys).find(k => k.rootPc === targetRootPc && k.type === type) ??
+      Object.values(musicKeys).find(k => k.rootPc === targetRootPc);
+    const targetIsFlat = targetKey ? targetKey.accType === 'flat' : isFlat;
     setSequence(seq => seq.map(chord => {
       const newRoot = (chord.rootPc + offset) % 12;
-      const oldRootName = pcToName(chord.rootPc, isFlat);
-      const quality = chord.name.startsWith(oldRootName)
-        ? chord.name.slice(oldRootName.length)
-        : chord.name.replace(/^[A-G][#b]?/, '');
-      return { ...chord, rootPc: newRoot, pcs: chord.pcs.map(pc => (pc + offset) % 12), name: pcToName(newRoot, isFlat) + quality };
+      const quality = chord.name.replace(/^[A-G][#b]?/, '');
+      return { ...chord, rootPc: newRoot, pcs: chord.pcs.map(pc => (pc + offset) % 12), name: pcToName(newRoot, targetIsFlat) + quality };
     }));
     onTransposeKey?.(targetRootPc);
     setTransposeOpen(false);
