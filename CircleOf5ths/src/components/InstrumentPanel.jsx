@@ -115,18 +115,23 @@ export default function InstrumentPanel({
   const [ukuleleTuning,  setUkuleleTuning]  = useState(
     () => localStorage.getItem('co5_ukulele_tuning') || 'standard'
   );
+  const [bassTuning,     setBassTuning]     = useState(
+    () => localStorage.getItem('co5_bass_tuning') || 'standard4'
+  );
 
   useEffect(() => { localStorage.setItem('co5_guitar_tuning',  guitarTuning);  }, [guitarTuning]);
   useEffect(() => { localStorage.setItem('co5_ukulele_tuning', ukuleleTuning); }, [ukuleleTuning]);
+  useEffect(() => { localStorage.setItem('co5_bass_tuning',    bassTuning);    }, [bassTuning]);
 
   const activeTuning = useMemo(() => {
     const inst = INSTRUMENTS[instrumentMode];
     if (!inst?.tunings) return null;
     const key = instrumentMode === 'guitar'  ? guitarTuning
               : instrumentMode === 'ukulele' ? ukuleleTuning
+              : instrumentMode === 'bass'    ? bassTuning
               : inst.defaultTuning;
     return inst.tunings[key] ?? inst.tunings[inst.defaultTuning];
-  }, [instrumentMode, guitarTuning, ukuleleTuning]);
+  }, [instrumentMode, guitarTuning, ukuleleTuning, bassTuning]);
 
   const hasColorNotes  = colorNotePcs?.size > 0;
   const colorPcs       = showColorNotes && hasColorNotes && !activeChordPcs ? colorNotePcs : null;
@@ -153,8 +158,12 @@ export default function InstrumentPanel({
 
   const inst = INSTRUMENTS[instrumentMode];
   const showTuningRow = inst?.tunings && Object.keys(inst.tunings).length > 1;
-  const tuningValue    = instrumentMode === 'guitar' ? guitarTuning : ukuleleTuning;
-  const tuningOnChange = instrumentMode === 'guitar' ? setGuitarTuning : setUkuleleTuning;
+  const tuningValue    = instrumentMode === 'guitar'  ? guitarTuning
+                       : instrumentMode === 'ukulele' ? ukuleleTuning
+                       : bassTuning;
+  const tuningOnChange = instrumentMode === 'guitar'  ? setGuitarTuning
+                       : instrumentMode === 'ukulele' ? setUkuleleTuning
+                       : setBassTuning;
 
   const fretboardLabel = inst && activeTuning
     ? `${inst.label} · ${activeTuning.label} · ${activeChordPcs ? (activeChordRoot !== undefined ? pcToName(activeChordRoot, isFlat) + ' chord' : 'chord') : scaleLabel}`
@@ -251,7 +260,7 @@ export default function InstrumentPanel({
               <FretboardInstrument
                 openPcs={activeTuning.openPcs}
                 stringLabels={activeTuning.labels}
-                stringWidths={inst.stringWidths}
+                stringWidths={activeTuning.stringWidths ?? inst.stringWidths}
                 fretCount={inst.fretCount}
                 fretMarkers={inst.fretMarkers}
                 activeScalePcs={activeScalePcs}

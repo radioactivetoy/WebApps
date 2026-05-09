@@ -50,4 +50,26 @@ export const INSTRUMENTS = {
       dTuning:  { label: 'D Tuning (ADF#B)', openPcs: [11, 6, 2, 9], labels: ['B', 'F#', 'D', 'A'] },
     },
   },
+
+  bass: {
+    label: 'Bass',
+    emoji: '🎸',
+    defaultTuning: 'standard4',
+    stringWidths: [1.2, 1.5, 2.0, 2.5],   // 4-string default; 5/6-string tunings override per-tuning
+    fretCount: 15,
+    fretMarkers: { 3: 1, 5: 1, 7: 1, 9: 1, 12: 2, 15: 1 },
+    tunings: {
+      // ── 4-string ──
+      standard4: { label: '4-str Standard (EADG)',     openPcs: [7, 2, 9, 4],     labels: ['G', 'D', 'A', 'E'] },
+      dropD4:    { label: '4-str Drop D (DADG)',        openPcs: [7, 2, 9, 2],     labels: ['G', 'D', 'A', 'D'] },
+      halfDown4: { label: '4-str Half-step ↓ (Eb)',    openPcs: [6, 1, 8, 3],     labels: ['Gb', 'Db', 'Ab', 'Eb'] },
+      fullDown4: { label: '4-str Full-step ↓ (DGCF)',  openPcs: [5, 0, 7, 2],     labels: ['F', 'C', 'G', 'D'] },
+      dropC4:    { label: '4-str Drop C (CGCF)',        openPcs: [5, 0, 7, 0],     labels: ['F', 'C', 'G', 'C'] },
+      // ── 5-string ──
+      standard5: { label: '5-str Standard (BEADG)',    openPcs: [7, 2, 9, 4, 11], labels: ['G', 'D', 'A', 'E', 'B'],  stringWidths: [1.2, 1.5, 2.0, 2.5, 3.0] },
+      dropA5:    { label: '5-str Drop A (AEADG)',      openPcs: [7, 2, 9, 4, 9],  labels: ['G', 'D', 'A', 'E', 'A'],  stringWidths: [1.2, 1.5, 2.0, 2.5, 3.0] },
+      // ── 6-string ──
+      standard6: { label: '6-str Standard (BEADGC)',   openPcs: [0, 7, 2, 9, 4, 11], labels: ['C', 'G', 'D', 'A', 'E', 'B'], stringWidths: [1.0, 1.2, 1.5, 2.0, 2.5, 3.0] },
+    },
+  },
 };
