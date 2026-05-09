@@ -176,29 +176,27 @@ export default function DiatonicChords({
             );
           })()}
 
-          {selectedTriad && (
-            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/[0.06] flex-wrap">
-              <span className="text-[10px] text-white/25 uppercase font-bold tracking-widest flex-shrink-0">
-                Voicing
-              </span>
-              <div className="flex gap-1 flex-wrap items-center">
-                {VARIANTS.map(([val, label]) => val === null ? (
-                  <span key="sep" className="text-[9px] font-bold tracking-widest uppercase text-white/20 mx-1">
-                    {label}
-                  </span>
-                ) : (
-                  <button key={val}
-                    onClick={() => onChordVariantChange(val)}
-                    className="px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors"
-                    style={chordVariant === val
-                      ? { background: `${selectedTriad.color}30`, border: `1px solid ${selectedTriad.color}60`, color: selectedTriad.color }
-                      : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)' }}>
-                    {label}
-                  </button>
-                ))}
-              </div>
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/[0.06] flex-wrap">
+            <span className="text-[10px] text-white/25 uppercase font-bold tracking-widest flex-shrink-0">
+              Voicing
+            </span>
+            <div className="flex gap-1 flex-wrap items-center">
+              {VARIANTS.map(([val, label]) => val === null ? (
+                <span key="sep" className="text-[9px] font-bold tracking-widest uppercase text-white/20 mx-1">
+                  {label}
+                </span>
+              ) : (
+                <button key={val}
+                  onClick={() => onChordVariantChange(val)}
+                  className="px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors"
+                  style={chordVariant === val
+                    ? { background: `${selectedTriad?.color ?? 'rgba(167,139,250,0.3)'}`, border: `1px solid ${selectedTriad?.color ?? 'rgba(167,139,250,0.6)'}`, color: selectedTriad?.color ?? '#c4b5fd' }
+                    : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)' }}>
+                  {label}
+                </button>
+              ))}
             </div>
-          )}
+          </div>
         </>
       )}
     </div>

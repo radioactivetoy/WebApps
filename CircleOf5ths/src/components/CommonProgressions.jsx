@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { NOTE_COLORS, noteToPc, pcToName } from '../data/musicTheory.js';
-
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY ?? '';
+import { GEMINI_API_KEY, callGemini as geminiCall } from '../lib/gemini.js';
 
 const AI_GENRES = [
   'Pop','Rock','Metal','Funk','R&B','Soul','Gospel',
@@ -147,18 +146,12 @@ export default function CommonProgressions({
 
   // ── AI generation ───────────────────────────────────────────────────────────
   async function generateAiProgression() {
-    if (!API_KEY) {
-      setAiError('No API key — add VITE_GEMINI_API_KEY to .env and restart.');
-      return;
-    }
-    setAiLoading(true);
-    setAiResult(null);
-    setAiError('');
-    setAiActive(null);
+    if (!GEMINI_API_KEY) { setAiError('No API key — add VITE_GEMINI_API_KEY to .env and restart.'); return; }
+    setAiLoading(true); setAiResult(null); setAiError(''); setAiActive(null);
 
     const rootName  = currentKeyInfo?.label?.split(' ')[0] ?? '';
     const noteNames = activeScalePcs?.map(pc => pcToName(pc, isFlat)).join(', ') ?? '';
-    const modeCtx   = parentKeyName
+    const modeCtx = parentKeyName
       ? `${rootName} ${scaleMode} (derived from ${parentKeyName} Major, notes: ${noteNames})`
       : `${rootName} ${scaleMode} (notes: ${noteNames})`;
 
@@ -166,49 +159,20 @@ export default function CommonProgressions({
 Use only notes from the scale when possible. Return ONLY valid JSON:
 {"progression":[{"numeral":"I","name":"Cmaj7","notes":["C","E","G","B"]}],"explanation":"one sentence about why it works"}`;
 
-    const delays = [1000, 2000, 4000];
-    for (let i = 0; i < 3; i++) {
-      try {
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${API_KEY}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              systemInstruction: { parts: [{ text: 'You are an expert music theorist. Be concise.' }] },
-            }),
-          }
-        );
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          const msg = err?.error?.message ?? `HTTP ${res.status}`;
-          if (res.status === 400 || res.status === 401 || res.status === 403) {
-            setAiError(`API error: ${msg}`);
-            setAiLoading(false);
-            return;
-          }
-          throw new Error(msg);
-        }
-        const data = await res.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) {
-          const match = text.match(/\{[\s\S]*\}/);
-          if (match) {
-            try { setAiResult(JSON.parse(match[0])); }
-            catch { setAiError('Could not parse AI response.'); }
-          } else {
-            setAiError('AI returned an unexpected format.');
-          }
-          setAiLoading(false);
-          return;
-        }
-      } catch (e) {
-        if (i < 2) await new Promise(r => setTimeout(r, delays[i]));
-        else { setAiError(`AI error: ${e.message}`); setAiLoading(false); return; }
+    try {
+      const text  = await geminiCall(prompt);
+      const match = text.match(/\{[\s\S]*\}/);
+      if (match) {
+        try { setAiResult(JSON.parse(match[0])); }
+        catch { setAiError('Could not parse AI response.'); }
+      } else {
+        setAiError('AI returned an unexpected format.');
       }
+    } catch (e) {
+      setAiError(`AI error: ${e.message}`);
+    } finally {
+      setAiLoading(false);
     }
-    setAiLoading(false);
   }
 
   return (
@@ -313,8 +277,9 @@ Use only notes from the scale when possible. Return ONLY valid JSON:
             <div className="mt-3">
               <div className="flex flex-wrap gap-2 mb-2">
                 {aiResult.progression.map((chord, idx) => {
-                  const pcs    = chord.notes?.map(noteToPc).filter(n => n !== null) ?? [];
-                  const rootPc = pcs[0];
+                  const pcs      = chord.notes?.map(noteToPc).filter(n => n !== null) ?? [];
+                  const rootMatch = chord.name?.match(/^([A-G][#b]?)/);
+                  const rootPc    = rootMatch ? (noteToPc(rootMatch[1]) ?? pcs[0]) : pcs[0];
                   const color  = rootPc !== undefined ? NOTE_COLORS[rootPc] : '#a78bfa';
                   const isAct  = aiActive === idx;
                   return (

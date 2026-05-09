@@ -302,6 +302,18 @@ export function buildDiatonicChords(scalePcs, isFlat, chordType) {
         numeral = roman.toLowerCase() + 'mMaj7';
         name = root + 'mMaj7';
         pcs = [0,3,7,11].map(n => (rootPc+n)%12); break;
+      case 'forced-maj7':
+        numeral = (isMaj ? roman : roman.toLowerCase()) + 'maj7';
+        name = root + (isMin ? 'm' : '') + 'maj7';
+        pcs = [0,4,7,11].map(n => (rootPc+n)%12); break;
+      case 'forced-dom7':
+        numeral = roman + '7';
+        name = root + '7';
+        pcs = [0,4,7,10].map(n => (rootPc+n)%12); break;
+      case 'forced-m7':
+        numeral = roman.toLowerCase() + '7';
+        name = root + 'm7';
+        pcs = [0,3,7,10].map(n => (rootPc+n)%12); break;
       default: // triad
         name = root + suffix; pcs = [rootPc, third, fifth]; break;
     }
@@ -421,3 +433,60 @@ export const GUITAR_CHORDS = {
   'Am7b5':  { strings:['x',0,1,2,1,'x'], baseFret:1 },
   'Bbm7b5': { strings:['x',1,2,3,2,'x'], baseFret:1 },
 };
+
+// ── Chord name parsing ────────────────────────────────────────────────────────
+export const CHORD_QUALITY_INTERVALS = [
+  // longest suffixes first so greedier matches win
+  ['maj13',  [0,4,7,11,2,9]  ],
+  ['maj11',  [0,4,7,11,2,5]  ],
+  ['maj9',   [0,4,7,11,2]    ],
+  ['maj7',   [0,4,7,11]      ],
+  ['mMaj9',  [0,3,7,11,2]    ],
+  ['mMaj7',  [0,3,7,11]      ],
+  ['m7b5',   [0,3,6,10]      ],
+  ['m13',    [0,3,7,10,2,9]  ],
+  ['m11',    [0,3,7,10,2,5]  ],
+  ['m9',     [0,3,7,10,2]    ],
+  ['m7',     [0,3,7,10]      ],
+  ['m6/9',   [0,3,7,9,2]     ],
+  ['m6',     [0,3,7,9]       ],
+  ['madd9',  [0,3,7,2]       ],
+  ['dim7',   [0,3,6,9]       ],
+  ['°7',     [0,3,6,9]       ],
+  ['dim',    [0,3,6]         ],
+  ['°',      [0,3,6]         ],
+  ['7sus4',  [0,5,7,10]      ],
+  ['7alt',   [0,4,6,10,1]    ],
+  ['7#11',   [0,4,7,10,6]    ],
+  ['7#9',    [0,4,7,10,3]    ],
+  ['7b9',    [0,4,7,10,1]    ],
+  ['13',     [0,4,7,10,2,9]  ],
+  ['11',     [0,4,7,10,2,5]  ],
+  ['9',      [0,4,7,10,2]    ],
+  ['7',      [0,4,7,10]      ],
+  ['6/9',    [0,4,7,9,2]     ],
+  ['6',      [0,4,7,9]       ],
+  ['madd11', [0,3,7,5]       ],
+  ['add11',  [0,4,7,5]       ],
+  ['add9',   [0,4,7,2]       ],
+  ['5',      [0,7]           ],
+  ['sus4',   [0,5,7]         ],
+  ['sus2',   [0,2,7]         ],
+  ['aug',    [0,4,8]         ],
+  ['+',      [0,4,8]         ],
+  ['m',      [0,3,7]         ],
+  ['',       [0,4,7]         ],
+];
+
+export function parseChord(name) {
+  if (!name) return null;
+  const m = name.match(/^([A-G][#b]?)/);
+  if (!m) return null;
+  const rootPc = noteToPc(m[1]);
+  if (rootPc == null) return null;
+  const rest = name.slice(m[1].length);
+  for (const [suffix, intervals] of CHORD_QUALITY_INTERVALS) {
+    if (rest === suffix) return { rootPc, pcs: intervals.map(n => (rootPc + n) % 12), name };
+  }
+  return { rootPc, pcs: [0, 4, 7].map(n => (rootPc + n) % 12), name };
+}

@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import { NOTE_COLORS } from '../data/musicTheory.js';
-
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY ?? '';
-const MODEL   = 'gemini-3.1-flash-lite';
+import { NOTE_COLORS, parseChord, pcToName } from '../data/musicTheory.js';
+import { GEMINI_API_KEY, callGemini as geminiCall } from '../lib/gemini.js';
 
 const HINT_GROUPS = [
   {
@@ -48,61 +46,30 @@ export default function AIAssistant({
 
   function hintsClause() {
     if (!selectedHints.size) return '';
-    const list = [...selectedHints].join(', ');
-    return ` The result should feel: ${list}.`;
+    return ` The result should feel: ${[...selectedHints].join(', ')}.`;
   }
 
   async function callGemini(prompt, parseNext = false) {
-    if (!API_KEY) { setError('No API key — add VITE_GEMINI_API_KEY to .env and restart the dev server.'); return; }
+    if (!GEMINI_API_KEY) { setError('No API key — add VITE_GEMINI_API_KEY to .env and restart the dev server.'); return; }
     setLoading(true); setResponse(null); setError(''); setContinuation(null);
-    const delays = [1000, 2000, 4000];
-    for (let i = 0; i < 3; i++) {
-      try {
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`,
-          {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              systemInstruction: { parts: [{ text: 'You are an expert music theorist. Be concise.' }] },
-            }),
-          }
-        );
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          const msg = err?.error?.message ?? `HTTP ${res.status}`;
-          if (res.status === 400 || res.status === 401 || res.status === 403) {
-            setError(`API error: ${msg}`); setLoading(false); return;
-          }
-          throw new Error(msg);
+    try {
+      const text = await geminiCall(prompt);
+      setResponse(text);
+      if (parseNext) {
+        const nextLine = text.split('\n').find(l => l.startsWith('NEXT:'));
+        if (nextLine) {
+          const names = nextLine.replace('NEXT:', '').split('|').map(s => s.trim()).filter(Boolean);
+          setContinuation(names);
         }
-        const data = await res.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) {
-          setResponse(text);
-          if (parseNext) {
-            const nextLine = text.split('\n').find(l => l.startsWith('NEXT:'));
-            if (nextLine) {
-              const names = nextLine.replace('NEXT:', '').split('|').map(s => s.trim()).filter(Boolean);
-              setContinuation(names);
-            }
-          }
-          setLoading(false); return;
-        }
-      } catch (e) {
-        if (i < 2) await new Promise(r => setTimeout(r, delays[i]));
-        else { setError(`AI error: ${e.message}`); setLoading(false); return; }
       }
+    } catch (e) {
+      setError(`AI error: ${e.message}`);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
-  const noteNames = activeScalePcs.map(pc => {
-    const names     = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-    const flatNames = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
-    return isFlat ? flatNames[pc] : names[pc];
-  }).join(', ');
-
+  const noteNames   = activeScalePcs.map(pc => pcToName(pc, isFlat)).join(', ');
   const modeContext = parentKeyName
     ? `${scaleLabel} (derived from ${parentKeyName} Major, notes: ${noteNames})`
     : `${scaleLabel} (notes: ${noteNames})`;
@@ -133,7 +100,7 @@ export default function AIAssistant({
 
   const hasProgression = !!progressionSequence?.length;
 
-  if (!API_KEY) return (
+  if (!GEMINI_API_KEY) return (
     <div className="rounded-2xl px-5 py-4 flex items-center gap-3"
       style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
       <span className="text-xl opacity-30">🤖</span>
@@ -252,8 +219,8 @@ export default function AIAssistant({
           <p className="text-[9px] font-bold tracking-[2px] uppercase text-white/25 mb-2">Add to progression</p>
           <div className="flex flex-wrap gap-1.5">
             {continuationChords.map((name, i) => {
-              const chord = diatonicChords?.find(c => c.name === name);
-              const color = chord ? NOTE_COLORS[chord.rootPc] : 'rgba(255,255,255,0.5)';
+              const chord = parseChord(name);
+              const color = chord ? NOTE_COLORS[chord.rootPc] : 'rgba(255,255,255,0.4)';
               return (
                 <button
                   key={i}
@@ -264,14 +231,10 @@ export default function AIAssistant({
                   }}
                   disabled={!chord}
                   className="px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all hover:opacity-80 disabled:opacity-40"
-                  style={{
-                    background: chord ? `${color}18` : 'rgba(255,255,255,0.05)',
-                    borderColor: chord ? `${color}45` : 'rgba(255,255,255,0.12)',
-                    color,
-                  }}
-                  title={chord ? `Add ${name} to progression` : `${name} not in current diatonic set`}>
+                  style={{ background: `${color}18`, borderColor: `${color}45`, color }}
+                  title={`Add ${name} to progression`}>
                   {name}
-                  {chord && <span className="ml-1 opacity-50 text-[9px]">+</span>}
+                  <span className="ml-1 opacity-50 text-[9px]">+</span>
                 </button>
               );
             })}

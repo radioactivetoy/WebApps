@@ -169,9 +169,12 @@ function upgradeTo7th(chord) {
 }
 
 const PALETTE_VARIANTS = [
-  ['triad',      'Triad'],
-  ['seventh',    '7th'],
-  ['ninth',      '9th'],
+  ['triad',       'Triad'],
+  ['seventh',     '7th (auto)'],
+  ['forced-maj7', '△7 (all)'],
+  ['forced-dom7', 'Dom7 (all)'],
+  ['forced-m7',   'm7 (all)'],
+  ['ninth',       '9th'],
   ['eleventh',   '11th'],
   ['thirteenth', '13th'],
   ['sixth',      '6th'],
@@ -190,10 +193,64 @@ const PALETTE_VARIANTS = [
   ['mmaj7',      'mMaj7'],
 ];
 
+const CUSTOM_QUALITY_GROUPS = [
+  { group: 'Triad',  qualities: [
+    { label: 'maj',  intervals: [0,4,7]        },
+    { label: 'm',    intervals: [0,3,7]        },
+    { label: 'dim',  intervals: [0,3,6]        },
+    { label: 'aug',  intervals: [0,4,8]        },
+  ]},
+  { group: 'Add·Sus', qualities: [
+    { label: '5',      intervals: [0,7]        },
+    { label: 'add9',   intervals: [0,4,7,2]    },
+    { label: 'madd9',  intervals: [0,3,7,2]    },
+    { label: 'add11',  intervals: [0,4,7,5]    },
+    { label: 'madd11', intervals: [0,3,7,5]    },
+    { label: 'sus2',   intervals: [0,2,7]      },
+    { label: 'sus4',   intervals: [0,5,7]      },
+  ]},
+  { group: '6th', qualities: [
+    { label: '6',    intervals: [0,4,7,9]     },
+    { label: 'm6',   intervals: [0,3,7,9]     },
+    { label: '6/9',  intervals: [0,4,7,9,2]   },
+    { label: 'm6/9', intervals: [0,3,7,9,2]   },
+  ]},
+  { group: '7th', qualities: [
+    { label: 'maj7',  intervals: [0,4,7,11]   },
+    { label: '7',     intervals: [0,4,7,10]   },
+    { label: 'm7',    intervals: [0,3,7,10]   },
+    { label: 'mMaj7', intervals: [0,3,7,11]   },
+    { label: 'm7b5',  intervals: [0,3,6,10]   },
+    { label: '°7',    intervals: [0,3,6,9]    },
+    { label: '7sus4', intervals: [0,5,7,10]   },
+  ]},
+  { group: '9th', qualities: [
+    { label: 'maj9',  intervals: [0,4,7,11,2] },
+    { label: '9',     intervals: [0,4,7,10,2] },
+    { label: 'm9',    intervals: [0,3,7,10,2] },
+    { label: 'mMaj9', intervals: [0,3,7,11,2] },
+    { label: '7b9',   intervals: [0,4,7,10,1] },
+    { label: '7#9',   intervals: [0,4,7,10,3] },
+  ]},
+  { group: '11th', qualities: [
+    { label: 'maj11', intervals: [0,4,7,11,2,5] },
+    { label: '11',    intervals: [0,4,7,10,2,5] },
+    { label: 'm11',   intervals: [0,3,7,10,2,5] },
+    { label: '7#11',  intervals: [0,4,7,10,6]   },
+  ]},
+  { group: '13th', qualities: [
+    { label: 'maj13', intervals: [0,4,7,11,2,9] },
+    { label: '13',    intervals: [0,4,7,10,2,9] },
+    { label: 'm13',   intervals: [0,3,7,10,2,9] },
+  ]},
+  { group: 'Alt', qualities: [
+    { label: '7alt',  intervals: [0,4,6,10,1]   },
+  ]},
+];
+
 // ────────────────────────────────────────────────────────────────────────────
 
-let _uid = 0;
-function uid() { return ++_uid; }
+function uid() { return crypto.randomUUID(); }
 
 const LS_KEY = 'co5_custom_progressions';
 function loadSaved() {
@@ -212,8 +269,11 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
   const [saveName, setSaveName] = useState('');
   const [saved,    setSaved]    = useState(loadSaved);
 
-  const [use7ths,       setUse7ths]       = useState(false);
+  const [use7ths,        setUse7ths]        = useState(false);
   const [paletteVariant, setPaletteVariant] = useState('triad');
+  const [customRoot,     setCustomRoot]     = useState(0);
+  const [customQuality,  setCustomQuality]  = useState('');
+  const [customOpen,     setCustomOpen]     = useState(false);
 
   // Drag-and-drop state
   // dragSource: { type: 'palette', chord } | { type: 'sequence', idx } | null
@@ -535,6 +595,84 @@ const ProgressionBuilder = forwardRef(function ProgressionBuilder({
           </div>
         )}
       </div>
+
+      {/* ── Custom chord ── */}
+      {(() => {
+        if (!customOpen) return (
+          <button
+            onClick={() => setCustomOpen(true)}
+            className="mb-3 w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-left transition-colors hover:bg-white/5"
+            style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <span className="text-[8px] font-bold tracking-[2px] uppercase text-white/20">Custom chord</span>
+            <span className="text-white/20 text-[10px]">▼</span>
+          </button>
+        );
+        const CHROMATIC = isFlat
+          ? ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B']
+          : ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+        const allQualities = CUSTOM_QUALITY_GROUPS.flatMap(g => g.qualities);
+        const q = allQualities.find(q => q.label === customQuality) ?? allQualities[0];
+        const pcs = q.intervals.map(n => (customRoot + n) % 12);
+        const displayLabel = customQuality === '' ? 'maj' : customQuality;
+        const name = CHROMATIC[customRoot] + (customQuality === '' ? '' : customQuality);
+        const color = NOTE_COLORS[customRoot];
+        return (
+          <div className="mb-3 rounded-xl px-3 py-2.5" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <button onClick={() => setCustomOpen(false)}
+              className="w-full flex items-center justify-between mb-2 hover:opacity-70 transition-opacity">
+              <span className="text-[8px] font-bold tracking-[2px] uppercase text-white/20">Custom chord</span>
+              <span className="text-white/20 text-[10px]">▲</span>
+            </button>
+            {/* Root row */}
+            <div className="flex gap-0.5 flex-wrap mb-2">
+              {CHROMATIC.map((n, pc) => (
+                <button key={pc} onClick={() => setCustomRoot(pc)}
+                  className="w-7 h-6 rounded text-[9px] font-bold transition-all"
+                  style={customRoot === pc
+                    ? { background: `${NOTE_COLORS[pc]}30`, border: `1px solid ${NOTE_COLORS[pc]}70`, color: NOTE_COLORS[pc] }
+                    : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }}>
+                  {n}
+                </button>
+              ))}
+            </div>
+            {/* Quality rows — one per group */}
+            <div className="flex flex-col gap-0.5 mb-2">
+              {CUSTOM_QUALITY_GROUPS.map(({ group, qualities }) => (
+                <div key={group} className="flex items-center gap-0.5">
+                  <span className="w-10 flex-shrink-0 text-right text-[7px] font-bold tracking-wide uppercase pr-1"
+                    style={{ color: 'rgba(255,255,255,0.18)' }}>{group}</span>
+                  {qualities.map(({ label }) => {
+                    const isActive = customQuality === label || (label === 'maj' && customQuality === '');
+                    return (
+                      <button key={label}
+                        onClick={() => setCustomQuality(label === 'maj' ? '' : label)}
+                        className="px-1.5 h-5 rounded text-[9px] font-semibold transition-all"
+                        style={isActive
+                          ? { background: `${color}28`, border: `1px solid ${color}60`, color }
+                          : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)' }}>
+                        {label || 'maj'}
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+            {/* Preview + add */}
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold px-2 py-1 rounded-lg border"
+                style={{ background: `${color}18`, borderColor: `${color}40`, color }}>
+                {name}
+              </span>
+              <button
+                onClick={() => insertChord({ rootPc: customRoot, pcs, name }, sequence.length)}
+                className="px-3 py-1 rounded-lg text-[10px] font-semibold transition-opacity hover:opacity-80"
+                style={{ background: `${color}25`, border: `1px solid ${color}50`, color }}>
+                + Add to progression
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── Sequence ── */}
       <div className="mb-3">
