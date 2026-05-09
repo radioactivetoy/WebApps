@@ -71,10 +71,10 @@ function TuningDropdown({ tunings, value, onChange }) {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all"
-        style={{ background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.4)', color: 'rgba(196,181,253,0.9)' }}>
+        className="flex items-center gap-0.5 text-[10px] font-bold tracking-[2px] uppercase transition-colors hover:text-white/50"
+        style={{ color: open ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.4)' }}>
         {active?.label ?? value}
-        <span className="text-[8px] opacity-60">{open ? '▲' : '▼'}</span>
+        <span className="text-[8px] opacity-50 ml-0.5">{open ? '▲' : '▼'}</span>
       </button>
       {open && (
         <div
@@ -165,12 +165,6 @@ export default function InstrumentPanel({
                        : instrumentMode === 'ukulele' ? setUkuleleTuning
                        : setBassTuning;
 
-  const fretboardLabel = inst && activeTuning
-    ? `${inst.label} · ${activeTuning.label} · ${activeChordPcs ? (activeChordRoot !== undefined ? pcToName(activeChordRoot, isFlat) + ' chord' : 'chord') : scaleLabel}`
-    : inst
-    ? `${inst.label} · ${activeChordPcs ? (activeChordRoot !== undefined ? pcToName(activeChordRoot, isFlat) + ' chord' : 'chord') : scaleLabel}`
-    : '';
-
   return (
     <div className="rounded-2xl px-5 py-4"
       style={{ background: 'rgba(255,255,255,0.045)', border: '1px solid rgba(255,255,255,0.09)' }}>
@@ -224,20 +218,6 @@ export default function InstrumentPanel({
         </div>
       </div>
 
-      {/* Tuning row — space always reserved so all instruments stay the same height */}
-      <div className="flex items-center gap-2 mb-3" style={{ minHeight: '26px' }}>
-        {showTuningRow && (
-          <>
-            <span className="text-[10px] text-white/25">Tuning:</span>
-            <TuningDropdown
-              tunings={inst.tunings}
-              value={tuningValue}
-              onChange={tuningOnChange}
-            />
-          </>
-        )}
-      </div>
-
       {/* Instrument view */}
       <div className="overflow-x-auto">
         <div className="min-w-[540px]">
@@ -256,9 +236,22 @@ export default function InstrumentPanel({
             />
           ) : (
             <div className="mt-1 mb-1">
-              <p className="text-[10px] font-bold tracking-[2px] text-white/25 uppercase mb-3">
-                {fretboardLabel}
-              </p>
+              <div className="flex items-center gap-1.5 flex-wrap mb-3">
+                <span className="text-[10px] font-bold tracking-[2px] text-white/25 uppercase">{inst.label}</span>
+                {activeTuning && (
+                  <>
+                    <span className="text-[10px] font-bold text-white/15">·</span>
+                    {showTuningRow
+                      ? <TuningDropdown tunings={inst.tunings} value={tuningValue} onChange={tuningOnChange} />
+                      : <span className="text-[10px] font-bold tracking-[2px] text-white/25 uppercase">{activeTuning.label}</span>
+                    }
+                  </>
+                )}
+                <span className="text-[10px] font-bold text-white/15">·</span>
+                <span className="text-[10px] font-bold tracking-[2px] text-white/25 uppercase">
+                  {activeChordPcs ? (activeChordRoot !== undefined ? pcToName(activeChordRoot, isFlat) + ' chord' : 'chord') : scaleLabel}
+                </span>
+              </div>
               <FretboardInstrument
                 openPcs={activeTuning.openPcs}
                 stringLabels={activeTuning.labels}
