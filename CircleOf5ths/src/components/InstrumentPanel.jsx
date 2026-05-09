@@ -146,37 +146,39 @@ export default function InstrumentPanel({
       </div>
 
       {/* Instrument view */}
-      {instrumentMode === 'piano' ? (
-        <Piano
-          currentKeyInfo={currentKeyInfo}
-          activeScalePcs={activeScalePcs}
-          activeChordPcs={activeChordPcs}
-          activeChordRoot={activeChordRoot}
-          isFlat={isFlat}
-          labelMode={labelMode}
-          scaleLabel={scaleLabel}
-          colorPcs={colorPcs}
-          activePc={activePc}
-          compareScalePcs={compareScalePcs}
-        />
-      ) : (
-        <div className="mt-1 mb-1">
-          <p className="text-[10px] font-bold tracking-[2px] text-white/25 uppercase mb-3">
-            Guitar · {activeChordPcs ? (activeChordRoot !== undefined ? pcToName(activeChordRoot, isFlat) + ' chord' : 'chord') : scaleLabel}
-          </p>
-          <GuitarFretboard
+      <div className="overflow-x-auto">
+        {instrumentMode === 'piano' ? (
+          <Piano
+            currentKeyInfo={currentKeyInfo}
             activeScalePcs={activeScalePcs}
             activeChordPcs={activeChordPcs}
             activeChordRoot={activeChordRoot}
-            rootPc={rootPc}
-            labelMode={labelMode}
             isFlat={isFlat}
+            labelMode={labelMode}
+            scaleLabel={scaleLabel}
             colorPcs={colorPcs}
             activePc={activePc}
             compareScalePcs={compareScalePcs}
           />
-        </div>
-      )}
+        ) : (
+          <div className="mt-1 mb-1">
+            <p className="text-[10px] font-bold tracking-[2px] text-white/25 uppercase mb-3">
+              Guitar · {activeChordPcs ? (activeChordRoot !== undefined ? pcToName(activeChordRoot, isFlat) + ' chord' : 'chord') : scaleLabel}
+            </p>
+            <GuitarFretboard
+              activeScalePcs={activeScalePcs}
+              activeChordPcs={activeChordPcs}
+              activeChordRoot={activeChordRoot}
+              rootPc={rootPc}
+              labelMode={labelMode}
+              isFlat={isFlat}
+              colorPcs={colorPcs}
+              activePc={activePc}
+              compareScalePcs={compareScalePcs}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Audio bar */}
       <div className="flex items-center gap-3 mt-4 p-3 rounded-xl"

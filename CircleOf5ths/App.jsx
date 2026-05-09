@@ -212,9 +212,9 @@ export default function App() {
         />
 
         {/* Two-column area */}
-        <div className="flex gap-5">
+        <div className="flex flex-col md:flex-row gap-5">
           {/* Left column */}
-          <div className="flex-shrink-0 flex flex-col gap-4 w-[420px]">
+          <div className="flex-shrink-0 flex flex-col gap-4 w-full md:w-[420px]">
             <Circle
               selectedKey={selectedKey}
               onKeySelect={handleKeySelect}
